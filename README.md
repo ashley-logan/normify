@@ -1,2 +1,3 @@
-# rust_lobbying_analysis
-Pulling data from the LDA rest api and analyzing it
+# normify
+Turning a nested json structure into a normalized database
+
