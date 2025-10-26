@@ -9,19 +9,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
 
 [[package]]
-name = "ahash"
-version = "0.8.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a15f179cd60c4584b8a8c596927aadc462e27f2ca70c04e0071964a73ba7a75"
-dependencies = [
- "cfg-if",
- "getrandom 0.3.4",
- "once_cell",
- "version_check",
- "zerocopy",
-]
-
-[[package]]
 name = "aho-corasick"
 version = "1.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -589,17 +576,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bfe33edd8e85a12a67454e37f8c75e730830d83e313556ab9ebf9ee7fbeb3bfb"
 dependencies = [
  "crc32fast",
- "libz-rs-sys",
  "miniz_oxide",
-]
-
-[[package]]
-name = "float-cmp"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b09cf3155332e944990140d967ff5eceb70df778b34f77d8075db46e4704e6d8"
-dependencies = [
- "num-traits",
 ]
 
 [[package]]
@@ -797,16 +774,6 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tracing",
-]
-
-[[package]]
-name = "halfbrown"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aa2c385c6df70fd180bbb673d93039dbd2cd34e41d782600bdf6e1ca7bce39aa"
-dependencies = [
- "hashbrown 0.15.5",
- "serde",
 ]
 
 [[package]]
@@ -1181,15 +1148,6 @@ name = "libm"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f9fbbcab51052fe104eb5e5d351cf728d30a5be1fe14d9be8a3b097481fb97de"
-
-[[package]]
-name = "libz-rs-sys"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "840db8cf39d9ec4dd794376f38acc40d0fc65eec2a8f484f7fd375b84602becd"
-dependencies = [
- "zlib-rs",
-]
 
 [[package]]
 name = "linux-raw-sys"
@@ -1688,7 +1646,6 @@ dependencies = [
  "bytes",
  "chrono",
  "fast-float2",
- "flate2",
  "fs4",
  "futures",
  "glob",
@@ -1703,7 +1660,6 @@ dependencies = [
  "polars-arrow",
  "polars-core",
  "polars-error",
- "polars-json",
  "polars-parquet",
  "polars-schema",
  "polars-time",
@@ -1714,33 +1670,10 @@ dependencies = [
  "ryu",
  "serde",
  "serde_json",
- "simd-json",
  "simdutf8",
  "tokio",
  "tokio-util",
  "url",
- "zstd",
-]
-
-[[package]]
-name = "polars-json"
-version = "0.51.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b26d1a04292a82183c8eba94fdf1584f200bfac5ac2f4a6c5652c8c8ed3bb41c"
-dependencies = [
- "chrono",
- "fallible-streaming-iterator",
- "hashbrown 0.15.5",
- "indexmap",
- "itoa",
- "num-traits",
- "polars-arrow",
- "polars-compute",
- "polars-error",
- "polars-utils",
- "ryu",
- "simd-json",
- "streaming-iterator",
 ]
 
 [[package]]
@@ -2243,26 +2176,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ref-cast"
-version = "1.0.25"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f354300ae66f76f1c85c5f84693f0ce81d747e2c3f21a45fef496d89c960bf7d"
-dependencies = [
- "ref-cast-impl",
-]
-
-[[package]]
-name = "ref-cast-impl"
-version = "1.0.25"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7186006dcb21920990093f30e3dea63b7d6e977bf1256be20c3563a5db070da"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "regex"
 version = "1.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2380,9 +2293,9 @@ name = "rust_lobbying_analysis"
 version = "0.1.0"
 dependencies = [
  "polars",
- "polars-io",
  "reqwest",
- "serde",
+ "serde_json",
+ "uuid",
 ]
 
 [[package]]
@@ -2630,23 +2543,6 @@ name = "simd-adler32"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d66dc143e6b11c1eddc06d5c423cfc97062865baf299914ab64caa38182078fe"
-
-[[package]]
-name = "simd-json"
-version = "0.15.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c962f626b54771990066e5435ec8331d1462576cd2d1e62f24076ae014f92112"
-dependencies = [
- "ahash",
- "getrandom 0.3.4",
- "halfbrown",
- "once_cell",
- "ref-cast",
- "serde",
- "serde_json",
- "simdutf8",
- "value-trait",
-]
 
 [[package]]
 name = "simdutf8"
@@ -3109,18 +3005,6 @@ dependencies = [
  "js-sys",
  "serde",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "value-trait"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0508fce11ad19e0aab49ce20b6bec7f8f82902ded31df1c9fc61b90f0eb396b8"
-dependencies = [
- "float-cmp",
- "halfbrown",
- "itoa",
- "ryu",
 ]
 
 [[package]]
@@ -3691,12 +3575,6 @@ dependencies = [
  "quote",
  "syn",
 ]
-
-[[package]]
-name = "zlib-rs"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f06ae92f42f5e5c42443fd094f245eb656abf56dd7cce9b8b263236565e00f2"
 
 [[package]]
 name = "zstd"

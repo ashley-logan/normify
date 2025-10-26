@@ -1,44 +1,20 @@
-use polars::prelude::*;
-use polars_io::json::{JsonFormat, JsonReader};
-use reqwest::blocking::Client;
-use serde::Deserialize;
+use serde_json::Value;
+use std::fs;
+use std::io::Read;
+mod normalizer;
+use normalizer::Normalizer;
+use std::collections::HashMap;
 
-const API_TOKEN: &'static str = "0b4ad4965dc4cd6f03bc4964b9048afab60afc4b";
-
-#[derive(Deserialize)]
-struct FilingRegistrant {
-    id: u16,
-    name: String,
-}
-#[derive(Deserialize)]
-struct FilingClient {
-    id: u16,
-    name: String
-}
-#[derive(Deserialize)]
-struct Filing {
-    filing_uuid: String,
-    filing_year: u8,
-    income: Option<isize>,
-    expenses: Option<isize>,
-    registrant: FilingRegistrant,
-    client: FilingClient
-
-}
-#[derive(Deserialize)]
-struct FilingResponse {
-    results: Vec<Filing>
-}
-
-fn main() -> Result<(), reqwest::Error> {
-    let client = Client::new();
-    let url: &'static str = "https://lda.senate.gov/api/v1/filings";
-
-    let response: FilingResponse = client.get(url).send()?.json()?;
-    let series_vec: Vec<Series> = Vec::new();
-
-    response.results.iter().for_each(|f| series_vec.push(Series::new());
-
-    println!("Data :\n {}", df);
-    Ok(())
+fn main() {
+    let mut file = fs::File::open("./tests/test_file.json").expect("couldn't open file");
+    let mut json_content: String = String::new();
+    file.read_to_string(&mut json_content)
+        .expect("Unable to read json file");
+    let payload: Value =
+        serde_json::from_str(&json_content).expect("Could not parse json to Value variant"); // use serde-json to get the json_str as a Value variant
+    let mut context = Normalizer::new(); // initialize the context for normalization
+    context.normify_json(payload).expect("error normify"); // normalize
+    let tables: HashMap<String, HashMap<String, Vec<Value>>> = context.get_tables(); // get the tables as a hashmap of table names to tables
+    // println!("{:?}", tables);
+    // println!("{:?}", payload);
 }
