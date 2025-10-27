@@ -1,52 +1,42 @@
-{
-    "preferences_table": {
-        "notifications": [Bool(false)
-        ],
-        "id": [String("441b894e-b083-4ad5-bf8a-1cacb8a24a80")
-        ],
-        "theme": [String("light")
-        ],
-        "language": [String("en")
-        ],
-        "profile_table_id": [String("adfbc87a-38f6-41bd-bd9d-226be93d12ef")
-        ]
+[
+    {
+        "id": String("9a82e498-2e9e-4f74-ad75-72b6c5233f36"),
+        "name": String("Wireless Mouse"),
+        "orders_table_id": String("0ad90564-ff94-4f11-b7f9-eafedca49f7f"),
+        "price": Number(29.99),
+        "product_id": String("P100"),
+        "quantity": Number(1)
     },
-    "root": {
-        "user_id": [Number(3)
-        ],
-        "email": [String("carol@example.com")
-        ],
-        "profile": [Null
-        ],
-        "id": [String("e577b32a-7daf-46e4-985d-01dfc88f1ae3")
-        ],
-        "signup_date": [Null
-        ],
-        "is_active": [Bool(true)
-        ],
-        "name": [String("Carol Davis")
-        ]
+    {
+        "id": String("aae26c92-0522-4064-88ba-1227f0e653bb"),
+        "name": String("Mechanical Keyboard"),
+        "orders_table_id": String("0ad90564-ff94-4f11-b7f9-eafedca49f7f"),
+        "price": Number(70.0),
+        "product_id": String("P101"),
+        "quantity": Number(1)
     },
-    "shipping_address_table": {
-        "city": [String("Boston")
-        ],
-        "zip": [String("02108")
-        ],
-        "street": [String("456 Oak Ave")
-        ],
-        "id": [String("ed3a4ade-2e51-4020-8589-a57aac813e63")
-        ],
-        "root_id": [String("7e7b643a-be6a-4bcc-bdb4-7c19c8696b96")
-        ]
+    {
+        "id": String("e86359bf-5f09-4962-bc17-f6137508b55b"),
+        "name": String("USB Cable"),
+        "orders_table_id": String("bb374675-b187-4aa4-9bef-dd2518eee3fc"),
+        "price": Number(15.5),
+        "product_id": String("P102"),
+        "quantity": Number(2)
     },
-    "profile_table": {
-        "age": [Number(35)
-        ],
-        "id": [String("adfbc87a-38f6-41bd-bd9d-226be93d12ef")
-        ],
-        "root_id": [String("aa8c6ff3-5326-4fdb-8f44-df7d5ca40ceb")
-        ],
-        "location": [String("Boston")
-        ]
+    {
+        "id": String("1c85f451-cd64-475d-a6a6-902b88025190"),
+        "name": String("Phone Case"),
+        "orders_table_id": String("bb374675-b187-4aa4-9bef-dd2518eee3fc"),
+        "price": Number(14.5),
+        "product_id": String("P103"),
+        "quantity": Number(1)
+    },
+    {
+        "id": String("45dd8a6f-d98b-4694-9413-dbebc6013050"),
+        "name": String("Mouse Pad"),
+        "orders_table_id": String("500ee380-bb5c-4f3a-9d16-59595696de2b"),
+        "price": Number(25.0),
+        "product_id": String("P104"),
+        "quantity": Number(1)
     }
-}
+]
