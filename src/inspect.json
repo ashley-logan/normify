@@ -40,3 +40,114 @@
         "quantity": Number(1)
     }
 ]
+
+[
+    {
+        "city": String("New York"),
+        "id": String("84372bb2-9856-4758-991f-f8c7d148e419"),
+        "orders_table_id": String("0ad90564-ff94-4f11-b7f9-eafedca49f7f"),
+        "street": String("123 Main St"),
+        "zip": String("10001")
+    },
+    {
+        "city": String("New York"),
+        "id": String("9df5c075-b8e3-48ad-85ad-c8b1cdda786d"),
+        "orders_table_id": String("bb374675-b187-4aa4-9bef-dd2518eee3fc"),
+        "street": String("123 Main St"),
+        "zip": String("10001")
+    },
+    {
+        "city": String("Boston"),
+        "id": String("ec2087df-a391-40fc-9060-0d1993e1d843"),
+        "orders_table_id": String("500ee380-bb5c-4f3a-9d16-59595696de2b"),
+        "street": String("456 Oak Ave"),
+        "zip": String("02108")
+    }
+]
+
+[
+    {
+        "ROOT_id": String("ffb60710-b9a0-4d3e-8a98-c307e9991198"),
+        "id": String("0ad90564-ff94-4f11-b7f9-eafedca49f7f"),
+        "order_id": String("ORD-001"),
+        "status": String("delivered"),
+        "total": Number(99.99)
+    },
+    {
+        "ROOT_id": String("ffb60710-b9a0-4d3e-8a98-c307e9991198"),
+        "id": String("bb374675-b187-4aa4-9bef-dd2518eee3fc"),
+        "order_id": String("ORD-002"),
+        "status": String("pending"),
+        "total": Number(45.5)
+    },
+    {
+        "ROOT_id": String("6f5eaf70-171e-487d-b74e-0d59076026c3"),
+        "id": String("500ee380-bb5c-4f3a-9d16-59595696de2b"),
+        "order_id": String("ORD-003"),
+        "status": String("shipped"),
+        "total": Number(25.0)
+    }
+
+    [
+        {
+            "id": String("568cd483-9af0-4e43-9fa3-95a4f1178306"),
+            "language": String("en"),
+            "notifications": Bool(true),
+            "profile_table_id": String("9be70715-37c9-4eb7-ae36-9f06912b721d"),
+            "theme": String("dark")
+        },
+        {
+            "id": String("8c9be83c-c00a-4760-bc33-b591c9febade"),
+            "language": String("en"),
+            "notifications": Bool(false),
+            "profile_table_id": String("3f681a76-8a10-4398-b7c6-da0d7ebe2657"),
+            "theme": String("light")
+        }
+    ]
+
+    [
+        {
+            "ROOT_id": String("ffb60710-b9a0-4d3e-8a98-c307e9991198"),
+            "age": Number(28),
+            "id": String("9be70715-37c9-4eb7-ae36-9f06912b721d"),
+            "location": String("New York")
+        },
+        {
+            "ROOT_id": String("6f5eaf70-171e-487d-b74e-0d59076026c3"),
+            "age": Number(35),
+            "id": String("3f681a76-8a10-4398-b7c6-da0d7ebe2657"),
+            "location": String("Boston")
+        }
+    ]
+
+    [
+        {
+            "email": String("alice@example.com"),
+            "id": String("ffb60710-b9a0-4d3e-8a98-c307e9991198"),
+            "is_active": Bool(true),
+            "name": String("Alice Johnson"),
+            "signup_date": String("2023-01-15"),
+            "tags": Array[String("premium"), String("early-adopter")
+            ],
+            "user_id": Number(1)
+        },
+        {
+            "email": String("bob@example.com"),
+            "id": String("6f5eaf70-171e-487d-b74e-0d59076026c3"),
+            "is_active": Bool(false),
+            "name": String("Bob Smith"),
+            "signup_date": String("2023-03-22"),
+            "tags": Array[String("standard")
+            ],
+            "user_id": Number(2)
+        },
+        {
+            "email": String("carol@example.com"),
+            "id": String("f4c14098-a826-4993-a538-2668951c13c2"),
+            "is_active": Bool(true),
+            "name": String("Carol Davis"),
+            "profile": Null,
+            "signup_date": Null,
+            "user_id": Number(3)
+        }
+    ]

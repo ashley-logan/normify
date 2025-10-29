@@ -1,15 +1,15 @@
+use crate::dtype::Dtype;
 use anyhow::Result;
 use indexmap::IndexMap;
 use polars::{frame::DataFrame, prelude::DataType};
 use serde_json::{Map, Value};
 use uuid::Uuid;
 
-type Row = Map<String, Value>; // row type is a map of field name to data element
+type Row = IndexMap<String, Dtype>; // row type is a map of field name to data element
 
 #[derive(Debug)]
 pub struct TableData {
     pub records: Vec<Row>, // represents the records as a vector of rows
-    schema: IndexMap<String, DataType>,
 }
 #[derive(Debug)]
 pub struct Relationship {
@@ -34,7 +34,6 @@ impl TableData {
     pub fn new() -> Self {
         TableData {
             records: Vec::new(),
-            schema: IndexMap::new(),
         }
     }
     pub fn append_row(&mut self, row: Row) {
@@ -54,13 +53,13 @@ impl NormifyContext {
         &mut self,
         table_name: &str,
         obj: &Map<String, Value>,
-        parent_id: Option<&Value>,
+        parent_id: Option<&Dtype>,
         parent_table: Option<&str>,
     ) -> Result<()> {
         println!("Creating table {}", table_name);
 
-        let mut new_row: Row = Map::new();
-        let curr_id = Value::String(Uuid::new_v4().to_string());
+        let mut new_row: Row = IndexMap::new();
+        let curr_id: Dtype = Uuid::new_v4().to_string().into();
         new_row.insert("id".to_string(), curr_id.clone());
 
         if let (Some(pid), Some(ptable)) = (parent_id, parent_table) {
@@ -69,46 +68,16 @@ impl NormifyContext {
 
         for (k, v) in obj {
             println!("processing item {}", k);
-            // process each value in the object
-            match v {
-                // if value is primitive type
-                Value::Null => {
-                    new_row.insert(k.to_string(), Value::Null);
-                }
-                Value::Bool(b) => {
-                    new_row.insert(k.to_string(), Value::Bool(b.clone()));
-                }
-                Value::Number(n) => {
-                    new_row.insert(k.to_string(), Value::Number(n.clone()));
-                }
-                Value::String(s) => {
-                    new_row.insert(k.to_string(), Value::String(s.to_string()));
-                }
-                Value::Object(child) => {
-                    println!("object {} is a new table", k);
-                    let new_table_name: String = format!("{}_table", k);
-                    // recursive call to self with table name as the key
-                    self.parse_object(
-                        new_table_name.as_str(), // creates a new table name based on the key of the child object
-                        child,                   // child object becomes target object
-                        Some(&curr_id),          // current id becomes parent id
-                        Some(table_name),        // current table name becomes parent table name
-                    )?;
-                }
-                Value::Array(arr) => {
-                    println!("key {}'s value is an array", k);
-                    if arr.iter().all(|ele| ele.is_object()) {
-                        self.parse_objects_array(
-                            table_name,
-                            Some(k.to_string()),
-                            Some(&curr_id),
-                            &arr,
-                        )?;
-                    } else {
-                        self.parse_values_array(&mut new_row, k.to_string(), arr.to_vec())?;
-                    }
-                }
-            };
+            if let Value::Object(child) = v {
+                let new_table: String = format!("{}_table", k);
+                self.parse_object(new_table.as_str(), child, Some(&curr_id), Some(table_name))?;
+            } else if let Value::Array(arr) = v
+                && arr.iter().all(Value::is_object)
+            {
+                self.parse_objects_array(table_name, Some(k.to_string()), Some(&curr_id), arr)?;
+            } else {
+                new_row.insert(k.to_string(), v.into());
+            }
         }
         let curr_table: &mut TableData = self
             .tables
@@ -118,27 +87,11 @@ impl NormifyContext {
         Ok(())
     }
 
-    pub fn parse_values_array(
-        &mut self,
-        curr_row: &mut Row,
-        key: String,
-        arr: Vec<Value>,
-    ) -> Result<()> {
-        if arr.is_empty() {
-            curr_row.insert(key, Value::Null);
-        } else if arr.iter().any(|ele| ele.is_object()) {
-            panic!("found an object in an array of values with key {}", key);
-        } else {
-            curr_row.insert(key, Value::Array(arr));
-        }
-        Ok(())
-    }
-
     pub fn parse_objects_array(
         &mut self,
         table_name: &str,
         key: Option<String>,
-        row_id: Option<&Value>,
+        row_id: Option<&Dtype>,
         arr: &Vec<Value>,
     ) -> Result<()> {
         if key.is_none() {

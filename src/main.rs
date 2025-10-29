@@ -1,5 +1,8 @@
+mod database_builder;
 mod normalizer;
+mod normalizer_copy;
 use normalizer::NormifyContext;
+mod dtype;
 use serde_json::Value;
 use std::fs;
 use std::io::Read;
