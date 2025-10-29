@@ -1,7 +1,7 @@
 mod database_builder;
-mod normalizer;
 mod normalizer_copy;
-use normalizer::NormifyContext;
+use database_builder::DataBase;
+use normalizer_copy::NormifyContext;
 mod dtype;
 use serde_json::Value;
 use std::fs;
@@ -16,8 +16,9 @@ fn main() {
         serde_json::from_str(&json_content).expect("Could not parse json to Value variant"); // use serde-json to get the json_str as a Value variant
     let data: NormifyContext =
         NormifyContext::from_value(payload).expect("error parsing data from paylaod");
-    // println!("{:?}", data);
-    for (name, table) in data.tables {
-        println!("Table name:\n {}\n Table data:\n {:?}", name, table.records);
-    }
+    let mut db: DataBase = DataBase::new();
+    db.build_database(data);
+    db.tables
+        .iter()
+        .for_each(|(name, db)| println!("{:?}\n{:?}", name, db));
 }

@@ -1,9 +1,8 @@
 use derive_more::{Display, From};
 use polars::prelude::DataType;
 use serde_json::Value;
-use std::fmt::Display;
 
-#[derive(Debug, Clone, From, Display)]
+#[derive(Debug, Clone, From)]
 pub enum Dtype {
     String(String),
     Float(f64),
@@ -102,21 +101,21 @@ impl Dtype {
         }
     }
 
-    pub fn normalize_arr(self) -> Self {
-        // converts all elements in an array to the same type
-        // defaults to string conversion if array is not already normalized
-        if let Dtype::Array(arr) = &self {
-            match self.get_array_type() {
-                Some(_) => self,
-                None => Dtype::Array(
-                    arr.iter()
-                        .map(Dtype::to_string)
-                        .map(Dtype::from)
-                        .collect::<Vec<Dtype>>(),
-                ),
-            }
-        } else {
-            panic!("normalize array can only be called on variant Array");
-        }
-    }
+    // pub fn normalize_arr(self) -> Self {
+    //     // converts all elements in an array to the same type
+    //     // defaults to string conversion if array is not already normalized
+    //     if let Dtype::Array(arr) = &self {
+    //         match self.get_array_type() {
+    //             Some(_) => self,
+    //             None => Dtype::Array(
+    //                 arr.iter()
+    //                     .map(Dtype::to_string)
+    //                     .map(Dtype::from)
+    //                     .collect::<Vec<Dtype>>(),
+    //             ),
+    //         }
+    //     } else {
+    //         panic!("normalize array can only be called on variant Array");
+    //     }
+    // }
 }

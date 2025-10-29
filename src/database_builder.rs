@@ -1,10 +1,17 @@
-use crate::dtype::{Dtype, TableData};
+use crate::{
+    dtype::Dtype,
+    normalizer_copy::{NormifyContext, TableData},
+};
 use indexmap::IndexMap;
-use polars::{frame::DataFrame, prelude::DataType, series::Series};
+use polars::{
+    frame::DataFrame,
+    prelude::{DataType, NamedFrom, Series},
+};
 
+#[derive(Debug)]
 pub struct DataBase {
-    schemas: IndexMap<String, IndexMap<String, DataType>>,
-    tables: IndexMap<String, DataFrame>,
+    pub schemas: IndexMap<String, IndexMap<String, DataType>>,
+    pub tables: IndexMap<String, DataFrame>,
 }
 
 impl DataBase {
@@ -15,8 +22,8 @@ impl DataBase {
         }
     }
 
-    pub fn build_database(&mut self, tbls: IndexMap<String, TableData>) {
-        for (name, data) in tbls {
+    pub fn build_database(&mut self, tbls: NormifyContext) {
+        for (name, data) in tbls.tables {
             let (df, schema) = df_from_rows(name, data);
             self.tables.insert(name, df);
             self.schemas.insert(name, schema);
@@ -38,8 +45,8 @@ fn df_from_rows<T: From<Dtype>>(
         }
     }
     for (name, data) in cols {
-        let s: Series = Series::new(name, data);
-        schema.insert(name, s.dtype());
+        let s: Series = Series::new(name.into(), data);
+        schema.insert(name, s.dtype().clone());
         series_vec.push(s);
     }
     (df!(tbl_name => series_vec), schema)

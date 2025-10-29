@@ -1,7 +1,7 @@
 use crate::dtype::Dtype;
 use anyhow::Result;
 use indexmap::IndexMap;
-use polars::{frame::DataFrame, prelude::DataType};
+use polars::prelude::*;
 use serde_json::{Map, Value};
 use uuid::Uuid;
 
@@ -21,7 +21,7 @@ pub struct Relationship {
 #[derive(Debug)]
 pub struct NormifyContext {
     pub tables: IndexMap<String, TableData>,
-    relationships: Vec<Relationship>,
+    pub relationships: Vec<Relationship>,
 }
 
 #[derive(Debug)]
