@@ -1,6 +1,6 @@
 use crate::{
     dtype::Dtype,
-    normalizer_copy::{NormifyContext, TableData},
+    normalizer::{NormifyContext, TableData},
 };
 use indexmap::IndexMap;
 use polars::{

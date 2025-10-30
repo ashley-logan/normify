@@ -15,12 +15,14 @@ pub enum Dtype {
     Null,
 }
 
-impl From<&Value> for Dtype {
-    fn from(value: &Value) -> Self {
+impl From<Value> for Dtype {
+    fn from(value: Value) -> Self {
         match value {
             Value::String(s) => Dtype::String(s.to_owned()),
             Value::Null => Dtype::Null,
-            Value::Array(arr) => Dtype::Array(arr.iter().map(Dtype::from).collect::<Vec<Dtype>>()),
+            Value::Array(arr) => {
+                Dtype::Array(arr.into_iter().map(Dtype::from).collect::<Vec<Dtype>>())
+            }
             Value::Bool(b) => Dtype::Bool(b.to_owned()),
             Value::Number(n) => {
                 if n.is_u64() {
@@ -39,7 +41,11 @@ impl From<&Value> for Dtype {
         }
     }
 }
-
+// impl From<Vec<Value>> for Dtype {
+//     fn from(value: Vec<Value>) -> Self {
+//         Self::Array(value.into_iter().map(Dtype::from).collect::<Vec<Dtype>>())
+//     }
+// }
 impl Dtype {
     pub fn is_float(&self) -> bool {
         matches!(&self, Dtype::Float(_))
