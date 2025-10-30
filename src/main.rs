@@ -1,7 +1,7 @@
 mod database_builder;
-mod normalizer_copy;
+mod normalizer;
 use database_builder::DataBase;
-use normalizer_copy::NormifyContext;
+use normalizer::NormifyContext;
 mod dtype;
 use serde_json::Value;
 use std::fs;
