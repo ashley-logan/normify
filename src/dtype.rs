@@ -41,11 +41,6 @@ impl From<Value> for Dtype {
         }
     }
 }
-// impl From<Vec<Value>> for Dtype {
-//     fn from(value: Vec<Value>) -> Self {
-//         Self::Array(value.into_iter().map(Dtype::from).collect::<Vec<Dtype>>())
-//     }
-// }
 impl Dtype {
     pub fn is_float(&self) -> bool {
         matches!(&self, Dtype::Float(_))

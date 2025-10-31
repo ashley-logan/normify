@@ -1,6 +1,6 @@
 use crate::dtype::Dtype;
 use anyhow::Result;
-use indexmap::IndexMap;
+use indexmap::{IndexMap, map::Iter};
 use serde_json::{Map, Value};
 use uuid::Uuid;
 
@@ -27,13 +27,25 @@ impl TableData {
             .or_insert_with(Vec::new)
             .push(col_data);
     }
+
+    pub fn iter_columns<'a>(&'a self) -> Iter<'a, String, Vec<Dtype>> {
+        self.columns.iter()
+    }
+
+    pub fn flat_iter(self) -> std::iter::Flatten<indexmap::map::IntoValues<String, Vec<Dtype>>> {
+        self.columns.into_values().flatten()
+    }
+
+    pub fn clean_nulls(&mut self) {
+        // keeps all columns that have at least one non-null value
+        self.columns.retain(|_, v| v.iter().any(|d| !d.is_null()));
+    }
 }
 
 impl Normifier {
     pub fn new() -> Self {
         Self {
             tables: IndexMap::new(),
-            // relations: Vec::new(),
         }
     }
 
@@ -42,6 +54,9 @@ impl Normifier {
         for (field, data) in record {
             table.extend_column(field, data);
         }
+    }
+    pub fn iter_tables<'a>(&'a self) -> Iter<'a, String, TableData> {
+        self.tables.iter()
     }
 
     pub fn parse_object(
@@ -53,7 +68,7 @@ impl Normifier {
     ) -> Result<()> {
         // TODO log table name
         let mut this_record: IndexMap<String, Dtype> = IndexMap::new();
-        let this_id = Uuid::new_v4().to_string();
+        let this_id = Uuid::now_v7().to_string();
         // this_table.extend_column("id".to_string(), this_id.clone().into());
         this_record.insert("id".to_string(), this_id.clone().into());
 
@@ -112,6 +127,10 @@ impl Normifier {
                 panic!("Neither Object nor Array found at root of JSON");
             }
         }
+        norm_context
+            .tables
+            .iter_mut()
+            .for_each(|(_, t)| t.clean_nulls());
         Ok(norm_context)
     }
 }
