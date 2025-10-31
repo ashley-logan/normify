@@ -9,9 +9,8 @@ pub enum Dtype {
     UInt(u64),
     Int(i64),
     Bool(bool),
-    #[from(skip)]
     Array(Vec<Dtype>),
-    #[from(skip)]
+    // #[from(skip)]
     Null,
 }
 

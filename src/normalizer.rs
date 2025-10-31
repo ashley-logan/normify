@@ -2,6 +2,7 @@ use crate::dtype::Dtype;
 use anyhow::Result;
 use indexmap::{IndexMap, map::Iter};
 use serde_json::{Map, Value};
+use std::iter::zip;
 use uuid::Uuid;
 
 #[derive(Debug)]
@@ -32,8 +33,10 @@ impl TableData {
         self.columns.iter()
     }
 
-    pub fn flat_iter(self) -> std::iter::Flatten<indexmap::map::IntoValues<String, Vec<Dtype>>> {
-        self.columns.into_values().flatten()
+    pub fn iter_items<'a>(
+        &'a self,
+    ) -> std::iter::Flatten<indexmap::map::Values<'a, String, Vec<Dtype>>> {
+        self.columns.values().flatten()
     }
 
     pub fn clean_nulls(&mut self) {

@@ -1,5 +1,6 @@
 mod normalizer;
 use normalizer::Normifier;
+mod database_builder;
 mod dtype;
 use serde_json::Value;
 use std::fs;
