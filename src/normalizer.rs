@@ -87,7 +87,7 @@ impl Normifier {
                         let child_table: String = format!("{}_table", k);
                         self.parse_object_array(&child_table, arr, Some(t_name), Some(&this_id))?
                     } else {
-                        this_record.insert(k.to_string(), v.to_owned().into());
+                        this_record.insert(k.to_string(), Dtype::from_value(v.to_owned()));
                     }
                 }
                 Value::Object(child) => {
@@ -95,7 +95,7 @@ impl Normifier {
                     self.parse_object(&new_tname, child, Some(&this_id), Some(t_name))?;
                 }
                 _ => {
-                    this_record.insert(k.to_string(), v.to_owned().into());
+                    this_record.insert(k.to_string(), Dtype::from_value(v.to_owned()));
                 } // _ => this_table.extend_column(k.to_string(), v.to_owned()),
             }
         }
