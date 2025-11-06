@@ -1,6 +1,7 @@
 mod normalizer;
 use normalizer::Normifier;
 mod database_builder;
+use database_builder::DataBase;
 mod dtype;
 use serde_json::Value;
 use std::fs;
@@ -14,11 +15,9 @@ fn main() {
     let payload: Value =
         serde_json::from_str(&json_content).expect("Could not parse json to Value variant"); // use serde-json to get the json_str as a Value variant
     let data: Normifier = Normifier::from_value(payload).expect("error parsing data from paylaod");
-    for (name, table) in data.iter_tables() {
-        println!("Table: {}\n\n", name);
-        for (field, col) in table.iter_columns() {
-            println!("\tColumn: {}\n", field);
-            println!("\t\t{:?}\n", col);
-        }
+    let db: DataBase = DataBase::from_norm(data);
+    println!("{}", db.tables.len());
+    for table in db.tables {
+        println!("{:?}", table);
     }
 }

@@ -2,17 +2,16 @@ use crate::dtype::Dtype;
 use anyhow::Result;
 use indexmap::{IndexMap, map::Iter};
 use serde_json::{Map, Value};
-use std::iter::zip;
 use uuid::Uuid;
 
 #[derive(Debug)]
 pub struct TableData {
-    columns: IndexMap<String, Vec<Dtype>>,
+    pub columns: IndexMap<String, Vec<Dtype>>,
 }
 
 #[derive(Debug)]
 pub struct Normifier {
-    tables: IndexMap<String, TableData>,
+    pub tables: IndexMap<String, TableData>,
     // relations: Vec<Relationship>,
 }
 
