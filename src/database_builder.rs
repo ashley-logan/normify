@@ -30,10 +30,18 @@ impl DataBase {
     }
 
     pub fn stringify_nested_collection(name: String, n_collection: Vec<Vec<Dtype>>) -> Series {
+        // todo: max subarray size\
+        let values_cap: usize = n_collection
+            .iter()
+            .map(|x| x.len())
+            .max()
+            .unwrap_or_default();
         let mut s_builder: ListStringChunkedBuilder =
-            ListStringChunkedBuilder::new(name.into(), n_collection.len(), 20);
+            ListStringChunkedBuilder::new(name.into(), n_collection.len(), values_cap);
         for inner_array in n_collection {
-            s_builder.append_series(&(Self::stringify_collection(inner_array)));
+            s_builder
+                .append_series(&(Self::stringify_collection(inner_array)))
+                .expect("failed appending series");
         }
         s_builder.finish().into_series()
     }
@@ -131,6 +139,8 @@ impl DataBase {
     /* idea: instead of Dtype enums, create structs that have a shared trait with
         custom implemention to allow easy unwrapping, processing, and conversion
     */
+
+    // unwrap a vector of Dtype::Array variants into vectors
     fn unwrap_nested(nested: Vec<Dtype>) -> Vec<Vec<Dtype>> {
         if !Dtype::array_is_type(&nested, Dtype::is_array) {
             // checks that every element is either an array variant or null variant
@@ -151,7 +161,7 @@ impl DataBase {
         // let the first non-null value in the vector determine the target type for the series
         println!("parsing column {}", name);
         let determining_element: Dtype = data.iter().find(|&x| !x.is_null()).unwrap().clone();
-        let needs_normalized: bool;
+        let normal: bool;
         if matches!(determining_element, Dtype::Array(_)) {
             // if data is an vector of array types, find the first non-null element within the flattened data
             let unnested_data: Vec<Vec<Dtype>> = Self::unwrap_nested(data);
@@ -161,10 +171,13 @@ impl DataBase {
                 .find(|&x| !x.is_null())
                 .unwrap()
                 .clone();
-            needs_normalized = !unnested_data
+
+            normal = unnested_data
                 .iter()
                 .all(|x| Self::is_normal_collection(&array_determinant, x));
-            if needs_normalized {
+
+            if normal {
+                println!("column: {} is nested and already normal", name);
                 let mut list_builder = Self::get_list_builder(&array_determinant, &unnested_data);
                 let mut series_vec: Vec<Series> = vec![];
                 for sub_array in unnested_data.into_iter() {
@@ -173,15 +186,20 @@ impl DataBase {
                 }
                 Self::build_list_chunked(series_vec, &mut list_builder).into_series()
             } else {
+                println!("column: {} is nested and is not normal", name);
+                // if nested array column is not normal,
+                // convert each element to a string
                 Self::stringify_nested_collection(name, unnested_data)
             }
         } else {
+            println!("column: {} is flat and already normal", name);
             // if the target type is a Dtype-primitive, check that all elements are of that type as well
-            needs_normalized = !Self::is_normal_collection(&determining_element, data.as_slice());
-            if needs_normalized {
+            normal = Self::is_normal_collection(&determining_element, data.as_slice());
+            if normal {
                 // if data is already normal, cast to a series
                 Self::collection_to_series(&determining_element, data)
             } else {
+                println!("column: {} is nested and not normal", name);
                 // if data is not normal, represent all data as strings and cast to a series
                 Self::stringify_collection(data)
             }
@@ -193,7 +211,7 @@ impl DataBase {
         println!("creating df {}", name);
         let mut df_data: Vec<Column> = vec![];
         for (field, data) in data.columns.into_iter() {
-            let s: Series = DataBase::build_series(field, data);
+            let s: Series = DataBase::build_series(field.clone(), data);
             let mut c: Column = s.into_column();
             c.rename(field.into());
             df_data.push(c);

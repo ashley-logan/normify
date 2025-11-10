@@ -99,11 +99,17 @@ impl Dtype {
         match value {
             Value::String(s) => Dtype::String(s.to_owned()),
             Value::Null => Dtype::Null,
-            Value::Array(arr) => Dtype::Array(
-                arr.into_iter()
-                    .map(Dtype::from_value)
-                    .collect::<Vec<Dtype>>(),
-            ),
+            Value::Array(arr) => {
+                if arr.is_empty() {
+                    Dtype::Array(vec![])
+                } else {
+                    Dtype::Array(
+                        arr.into_iter()
+                            .map(Dtype::from_value)
+                            .collect::<Vec<Dtype>>(),
+                    )
+                }
+            }
             Value::Bool(b) => Dtype::Bool(b.to_owned()),
             Value::Number(n) => {
                 if n.is_u64() {

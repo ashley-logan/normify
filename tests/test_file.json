@@ -1,5 +1,4 @@
-[
-    {
+[{
         "user_id": 1,
         "name": "Alice Johnson",
         "email": "alice@example.com",
@@ -14,13 +13,11 @@
                 "language": "en"
             }
         },
-        "orders": [
-            {
+        "orders": [{
                 "order_id": "ORD-001",
                 "total": 99.99,
                 "status": "delivered",
-                "items": [
-                    {
+                "items": [{
                         "product_id": "P100",
                         "name": "Wireless Mouse",
                         "price": 29.99,
@@ -43,8 +40,7 @@
                 "order_id": "ORD-002",
                 "total": 45.50,
                 "status": "pending",
-                "items": [
-                    {
+                "items": [{
                         "product_id": "P102",
                         "name": "USB Cable",
                         "price": 15.50,
@@ -84,26 +80,22 @@
                 "language": "en"
             }
         },
-        "orders": [
-            {
-                "order_id": "ORD-003",
-                "total": 25.00,
-                "status": "shipped",
-                "items": [
-                    {
-                        "product_id": "P104",
-                        "name": "Mouse Pad",
-                        "price": 25.00,
-                        "quantity": 1
-                    }
-                ],
-                "shipping_address": {
-                    "street": "456 Oak Ave",
-                    "city": "Boston",
-                    "zip": "02108"
-                }
+        "orders": [{
+            "order_id": "ORD-003",
+            "total": 25.00,
+            "status": "shipped",
+            "items": [{
+                "product_id": "P104",
+                "name": "Mouse Pad",
+                "price": 25.00,
+                "quantity": 1
+            }],
+            "shipping_address": {
+                "street": "456 Oak Ave",
+                "city": "Boston",
+                "zip": "02108"
             }
-        ],
+        }],
         "tags": [
             "standard"
         ]
