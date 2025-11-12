@@ -151,7 +151,7 @@ impl DataBase {
             if let Dtype::Array(a) = sub_array {
                 unnested.push(a);
             } else {
-                unnested.push(vec![]);
+                unnested.push(vec![Dtype::Null]);
             }
         }
         unnested

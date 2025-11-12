@@ -15,18 +15,19 @@ fn main() {
     let payload: Value =
         serde_json::from_str(&json_content).expect("Could not parse json to Value variant"); // use serde-json to get the json_str as a Value variant
     let data: Normifier = Normifier::from_value(payload).expect("error parsing data from paylaod");
-    for (name, data) in data.iter_tables() {
-        println!("{}\n", name);
-        for (col_name, col) in data.iter_columns() {
-            println!("{}", col_name);
-            for item in col {
-                println!("{}", item);
-            }
-        }
-    }
-    // let db: DataBase = DataBase::from_norm(data);
-    // println!("{}", db.tables.len());
-    // for table in db.tables {
-    //     println!("{:?}", table);
+    // for (name, data) in data.iter_tables() {
+    //     println!("Table: {}\n", name);
+    //     for (col_name, col) in data.iter_columns() {
+    //         println!("\tColumn: {}", col_name);
+    //         for item in col {
+    //             println!("\t\t{}", item);
+    //         }
+    //     }
+    //     println!();
     // }
+    let db: DataBase = DataBase::from_norm(data);
+    println!("{}", db.tables.len());
+    for table in db.tables {
+        println!("{:?}", table);
+    }
 }

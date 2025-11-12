@@ -101,7 +101,7 @@ impl Dtype {
             Value::Null => Dtype::Null,
             Value::Array(arr) => {
                 if arr.is_empty() {
-                    Dtype::Array(vec![])
+                    Dtype::Array(vec![Dtype::Null])
                 } else {
                     Dtype::Array(
                         arr.into_iter()

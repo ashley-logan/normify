@@ -87,9 +87,12 @@ impl Normifier {
             // iterate through each property and its value
             match v {
                 Value::Array(arr) => {
+                    if arr.is_empty() {
+                        this_record.insert(k.to_string(), Dtype::Null);
+                    }
                     // if the value is an array, this signifies the possible creation of a new table,
                     // where the current table has a one-to-many relationship with the new table
-                    if arr.iter().all(Value::is_object) {
+                    else if arr.iter().all(Value::is_object) {
                         // if every item is an object, this value becomes a new table
                         // new table name created from property name
                         let child_table: String = format!("{}_table", k);
