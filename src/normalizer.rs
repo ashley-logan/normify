@@ -6,22 +6,22 @@ use uuid::Uuid;
 
 #[derive(Debug)]
 pub struct TableData {
-    pub columns: IndexMap<String, Vec<Dtype>>,
+    pub(crate) columns: IndexMap<String, Vec<Dtype>>,
 }
 
 #[derive(Debug)]
 pub struct Normifier {
-    pub tables: IndexMap<String, TableData>,
+    pub(crate) tables: IndexMap<String, TableData>,
     // relations: Vec<Relationship>,
 }
 
 impl TableData {
-    pub fn new() -> Self {
+    fn new() -> Self {
         Self {
             columns: IndexMap::new(),
         }
     }
-    pub fn extend_column(&mut self, col_name: String, col_data: Dtype) {
+    fn extend_column(&mut self, col_name: String, col_data: Dtype) {
         // pushes a value into its appropriate column vector or creates a new vector
         self.columns
             .entry(col_name)
@@ -39,8 +39,8 @@ impl TableData {
         self.columns.values().flatten()
     }
 
-    pub fn clean_nulls(&mut self) {
-        // removes columns that contain entirely null values
+    fn clean_nulls(&mut self) {
+        // removes empty columns and columns that contain exclusively null values
         self.columns.retain(|_, v| v.iter().any(|d| !d.is_null()));
     }
 }
@@ -63,7 +63,7 @@ impl Normifier {
         self.tables.iter()
     }
 
-    pub fn parse_object(
+    pub(crate) fn parse_object(
         &mut self,
         t_name: &String,
         obj: &Map<String, Value>,
@@ -119,7 +119,7 @@ impl Normifier {
         Ok(())
     }
 
-    pub fn parse_object_array(
+    pub(crate) fn parse_object_array(
         &mut self,
         t_name: &String,
         arr: &Vec<Value>,
@@ -133,24 +133,24 @@ impl Normifier {
         Ok(())
     }
 
-    pub fn from_value(payload: Value) -> Result<Normifier> {
-        let mut norm_context: Normifier = Normifier::new();
-        let root_name: &String = &String::from("root_table");
-        match payload {
+    pub(crate) fn process_root(&mut self, root_value: Value, root_name: String) -> Result<()> {
+        match root_value {
             Value::Object(root_obj) => {
-                norm_context.parse_object(root_name, &root_obj, None, None)?;
+                self.parse_object(&root_name, &root_obj, None, None)?;
             }
             Value::Array(arr) => {
-                norm_context.parse_object_array(root_name, &arr, None, None)?;
+                self.parse_object_array(&root_name, &arr, None, None)?;
             }
             _ => {
                 panic!("Neither Object nor Array found at root of JSON");
             }
         }
-        norm_context
-            .tables
-            .iter_mut()
-            .for_each(|(_, t)| t.clean_nulls());
-        Ok(norm_context)
+        Ok(())
+    }
+
+    pub(crate) fn clean_normifier(&mut self) {
+        for (_, table) in &mut self.tables {
+            table.clean_nulls();
+        }
     }
 }
