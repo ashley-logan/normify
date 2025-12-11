@@ -5,6 +5,7 @@ use std::fmt::Display;
 
 #[derive(Debug, Clone, From)]
 pub enum Dtype {
+    // wrapper for json primitives
     String(String),
     Float(f64),
     UInt(u64),
@@ -23,6 +24,7 @@ impl Display for Dtype {
             Self::Float(fl) => write!(f, "{}", fl),
             Self::UInt(u) => write!(f, "{}", u),
             Self::Int(i) => write!(f, "{}", i),
+            // if Array, write each element individually
             Self::Array(a) => a
                 .iter()
                 .map(|x| write!(f, "{}, ", x.to_string()))
@@ -60,6 +62,7 @@ impl Dtype {
         matches!(&self, Dtype::Array(_))
     }
 
+    // extract vector from Array type (moves vector)
     pub fn into_vec(self) -> Result<Vec<Self>, NormError> {
         match self {
             Self::Array(arr) => Ok(arr),
@@ -67,6 +70,7 @@ impl Dtype {
         }
     }
 
+    // extract a slice from Array type (no ownership transfer)
     pub fn get_slice<'a>(&'a self) -> Result<&'a [Dtype], NormError> {
         if let Self::Array(arr) = self {
             Ok(arr.as_slice())
@@ -75,10 +79,12 @@ impl Dtype {
         }
     }
 
+    // returns true if all elements pass the specified type check function or are null
     pub fn array_is_type(arr: &Vec<Dtype>, check: fn(&Self) -> bool) -> bool {
         arr.iter().all(|i| check(i) || i.is_null())
     }
 
+    // cast each Dtype object in an array
     pub fn cast_to_option<T>(values: Vec<Dtype>) -> Vec<Option<T>>
     where
         Self: TryInto<T>,
