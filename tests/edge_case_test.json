@@ -1,0 +1,37 @@
+[
+    {
+        "user_id": 100,
+        "name": "",
+        "email": null,
+        "is_active": "yes",
+        "signup_date": "invalid-date",
+        "profile": {},
+        "orders": [],
+        "tags": []
+    },
+    {
+        "user_id": 101,
+        "name": "Edge User",
+        "email": "edge@example.com",
+        "is_active": true,
+        "signup_date": null,
+        "profile": null,
+        "orders": [
+            {
+                "order_id": null,
+                "total": "NaN",
+                "status": "unknown",
+                "items": [],
+                "shipping_address": {}
+            }
+        ],
+        "tags": [
+            null
+        ]
+    },
+    {
+        "user_id": 102,
+        "name": "Partial",
+        "email": "partial@example.com"
+    }
+]

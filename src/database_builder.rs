@@ -19,6 +19,7 @@ impl DataBase {
         }
     }
 
+    // convert each item in a vector of Dtypes to a Option<string> or none depending
     pub fn stringify_collection(collection: Vec<Dtype>) -> Series {
         Series::from_iter(collection.into_iter().map(|x| {
             if x.is_null() {
@@ -29,22 +30,29 @@ impl DataBase {
         }))
     }
 
+    // takes a vector of vectors of Dtypes and converts each element into a string
     pub fn stringify_nested_collection(name: String, n_collection: Vec<Vec<Dtype>>) -> Series {
         // todo: max subarray size\
+        // gets the length of the largest sub array in the parent vector
         let values_cap: usize = n_collection
             .iter()
             .map(|x| x.len())
             .max()
             .unwrap_or_default();
+        // creates a Chunked Array of strings
         let mut s_builder: ListStringChunkedBuilder =
             ListStringChunkedBuilder::new(name.into(), n_collection.len(), values_cap);
+        // populates the Array with series from each sub array
         for inner_array in n_collection {
             s_builder
                 .append_series(&(Self::stringify_collection(inner_array)))
                 .expect("failed appending series");
         }
+        // return the Chunked Array as a series
         s_builder.finish().into_series()
     }
+
+    // return if the collection has a uniform type
     pub fn is_normal_collection(determinant: &Dtype, collection: &[Dtype]) -> bool {
         use Dtype as DT;
         match determinant {
@@ -57,6 +65,7 @@ impl DataBase {
         }
     }
 
+    // convert each item into an Option and collect into a series
     pub fn collection_to_series(determinant: &Dtype, collection: Vec<Dtype>) -> Series {
         use Dtype as DT;
         match determinant {
@@ -89,6 +98,8 @@ impl DataBase {
         }
     }
 
+
+    // build a chunked list from a vector of series
     fn build_list_chunked(
         data: Vec<Series>,
         builder: &mut Box<dyn ListBuilderTrait>,

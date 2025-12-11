@@ -1,0 +1,69 @@
+[
+    {
+        "user_id": 200,
+        "name": "Nested User",
+        "email": "nested@example.com",
+        "is_active": true,
+        "signup_date": "2023-07-14",
+        "profile": {
+            "age": 40,
+            "location": "Deep City",
+            "preferences": {
+                "theme": "dark",
+                "notifications": true,
+                "language": "en",
+                "advanced": {
+                    "privacy": {
+                        "tracking": false,
+                        "ads": true,
+                        "subprefs": {
+                            "level1": {
+                                "level2": {
+                                    "level3": {
+                                        "option": "enabled",
+                                        "details": [
+                                            "a",
+                                            "b",
+                                            "c"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "orders": [
+            {
+                "order_id": "ORD-999",
+                "total": 999.99,
+                "status": "delivered",
+                "items": [
+                    {
+                        "product_id": "P999",
+                        "name": "Ultra Deep Product",
+                        "price": 999.99,
+                        "quantity": 1,
+                        "extra": {
+                            "meta": {
+                                "nested_meta": {
+                                    "deep_key": "deep_value"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "shipping_address": {
+                    "street": "999 Infinite Loop",
+                    "city": "Deep City",
+                    "zip": "99999"
+                }
+            }
+        ],
+        "tags": [
+            "deep",
+            "stress-test"
+        ]
+    }
+]

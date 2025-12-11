@@ -1,5 +1,5 @@
 use crate::dtype::Dtype;
-use anyhow::Result;
+use crate::error::NormError;
 use indexmap::{IndexMap, map::Iter};
 use serde_json::{Map, Value};
 use uuid::Uuid;
@@ -69,7 +69,7 @@ impl Normifier {
         obj: &Map<String, Value>,
         p_id: Option<&String>,
         pt_name: Option<&String>,
-    ) -> Result<()> {
+    ) -> Result<(), NormError> {
         // TODO log table name
         // creates a new index map to hold a row of data
         let mut this_record: IndexMap<String, Dtype> = IndexMap::new();
@@ -99,7 +99,7 @@ impl Normifier {
                         self.parse_object_array(&child_table, arr, Some(t_name), Some(&this_id))?
                     } else {
                         // if the array is an array of json primitives, just insert the array into the row container
-                        this_record.insert(k.to_string(), Dtype::from_value(v.to_owned()));
+                        this_record.insert(k.to_string(), Dtype::from_value(v.to_owned())?);
                     }
                 }
                 Value::Object(child) => {
@@ -110,8 +110,8 @@ impl Normifier {
                 }
                 _ => {
                     // if the type if non-nested, just insert it into the row container
-                    this_record.insert(k.to_string(), Dtype::from_value(v.to_owned()));
-                } // _ => this_table.extend_column(k.to_string(), v.to_owned()),
+                    this_record.insert(k.to_string(), Dtype::from_value(v.to_owned())?);
+                }
             }
         }
         // transform and add the row container to the current table
@@ -125,7 +125,7 @@ impl Normifier {
         arr: &Vec<Value>,
         p_name: Option<&String>,
         row_id: Option<&String>,
-    ) -> Result<()> {
+    ) -> Result<(), NormError> {
         for obj in arr {
             // parse each object in the array
             self.parse_object(t_name, obj.as_object().unwrap(), row_id, p_name)?;
@@ -133,19 +133,22 @@ impl Normifier {
         Ok(())
     }
 
-    pub(crate) fn process_root(&mut self, root_value: Value, root_name: String) -> Result<()> {
+    pub(crate) fn process_root(
+        &mut self,
+        root_value: Value,
+        root_name: String,
+    ) -> Result<(), NormError> {
         match root_value {
             Value::Object(root_obj) => {
                 self.parse_object(&root_name, &root_obj, None, None)?;
+                Ok(())
             }
             Value::Array(arr) => {
                 self.parse_object_array(&root_name, &arr, None, None)?;
+                Ok(())
             }
-            _ => {
-                panic!("Neither Object nor Array found at root of JSON");
-            }
+            _ => Err(NormError::Parse),
         }
-        Ok(())
     }
 
     pub(crate) fn clean_normifier(&mut self) {

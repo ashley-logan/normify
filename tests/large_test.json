@@ -1,0 +1,870 @@
+[
+    {
+        "user_id": 1,
+        "name": "Emma Lee",
+        "email": "user1@example.com",
+        "is_active": false,
+        "signup_date": null,
+        "profile": null,
+        "orders": [
+            {
+                "order_id": "ORD-202",
+                "total": 1966.51,
+                "status": "delivered",
+                "items": [
+                    {
+                        "product_id": "P344",
+                        "name": "Keyboard",
+                        "price": 407.9,
+                        "quantity": 2
+                    },
+                    {
+                        "product_id": "P330",
+                        "name": "Webcam",
+                        "price": 311.4,
+                        "quantity": 3
+                    },
+                    {
+                        "product_id": "P301",
+                        "name": "Headphones",
+                        "price": 72.17,
+                        "quantity": 3
+                    }
+                ],
+                "shipping_address": {
+                    "street": "117 Oak Ave",
+                    "city": "Boston",
+                    "zip": "48965"
+                }
+            },
+            {
+                "order_id": "ORD-194",
+                "total": 867.52,
+                "status": "delivered",
+                "items": [
+                    {
+                        "product_id": "P399",
+                        "name": "Webcam",
+                        "price": 400.81,
+                        "quantity": 1
+                    },
+                    {
+                        "product_id": "P313",
+                        "name": "Webcam",
+                        "price": 155.57,
+                        "quantity": 3
+                    }
+                ],
+                "shipping_address": {
+                    "street": "100 Pine St",
+                    "city": "New York",
+                    "zip": "91280"
+                }
+            },
+            {
+                "order_id": "ORD-384",
+                "total": 567.52,
+                "status": "delivered",
+                "items": [
+                    {
+                        "product_id": "P362",
+                        "name": "Laptop",
+                        "price": 121.72,
+                        "quantity": 1
+                    },
+                    {
+                        "product_id": "P356",
+                        "name": "Mouse",
+                        "price": 222.9,
+                        "quantity": 2
+                    }
+                ],
+                "shipping_address": {
+                    "street": "622 Elm St",
+                    "city": "Chicago",
+                    "zip": "94546"
+                }
+            }
+        ],
+        "tags": [
+            "vip",
+            "music-lover"
+        ]
+    },
+    {
+        "user_id": 2,
+        "name": "Frank Davis",
+        "email": "user2@example.com",
+        "is_active": false,
+        "signup_date": "2022-04-08",
+        "profile": {
+            "age": 46,
+            "location": "Boston",
+            "preferences": {
+                "theme": "light",
+                "notifications": false,
+                "language": "en"
+            }
+        },
+        "orders": [],
+        "tags": [
+            "premium",
+            "early-adopter"
+        ]
+    },
+    {
+        "user_id": 3,
+        "name": "Bob Davis",
+        "email": "user3@example.com",
+        "is_active": true,
+        "signup_date": null,
+        "profile": {
+            "age": 50,
+            "location": "New York",
+            "preferences": {
+                "theme": "light",
+                "notifications": false,
+                "language": "fr"
+            }
+        },
+        "orders": [
+            {
+                "order_id": "ORD-558",
+                "total": 836.76,
+                "status": "pending",
+                "items": [
+                    {
+                        "product_id": "P365",
+                        "name": "Monitor",
+                        "price": 69.38,
+                        "quantity": 1
+                    },
+                    {
+                        "product_id": "P355",
+                        "name": "Webcam",
+                        "price": 383.69,
+                        "quantity": 2
+                    }
+                ],
+                "shipping_address": {
+                    "street": "962 Pine St",
+                    "city": "Austin",
+                    "zip": "60406"
+                }
+            },
+            {
+                "order_id": "ORD-964",
+                "total": 252.72,
+                "status": "canceled",
+                "items": [
+                    {
+                        "product_id": "P392",
+                        "name": "Webcam",
+                        "price": 252.72,
+                        "quantity": 1
+                    }
+                ],
+                "shipping_address": {
+                    "street": "568 Pine St",
+                    "city": "Austin",
+                    "zip": "74782"
+                }
+            },
+            {
+                "order_id": "ORD-156",
+                "total": 805.94,
+                "status": "pending",
+                "items": [
+                    {
+                        "product_id": "P387",
+                        "name": "Webcam",
+                        "price": 402.97,
+                        "quantity": 2
+                    }
+                ],
+                "shipping_address": {
+                    "street": "403 Elm St",
+                    "city": "Austin",
+                    "zip": "76266"
+                }
+            }
+        ],
+        "tags": []
+    },
+    {
+        "user_id": 4,
+        "name": "David Johnson",
+        "email": "user4@example.com",
+        "is_active": true,
+        "signup_date": null,
+        "profile": null,
+        "orders": [
+            {
+                "order_id": "ORD-312",
+                "total": 1781.66,
+                "status": "canceled",
+                "items": [
+                    {
+                        "product_id": "P358",
+                        "name": "Mouse",
+                        "price": 287.86,
+                        "quantity": 3
+                    },
+                    {
+                        "product_id": "P347",
+                        "name": "Monitor",
+                        "price": 412.07,
+                        "quantity": 1
+                    },
+                    {
+                        "product_id": "P368",
+                        "name": "Headphones",
+                        "price": 168.67,
+                        "quantity": 3
+                    }
+                ],
+                "shipping_address": {
+                    "street": "217 Main St",
+                    "city": "Austin",
+                    "zip": "72472"
+                }
+            },
+            {
+                "order_id": "ORD-229",
+                "total": 1321.49,
+                "status": "pending",
+                "items": [
+                    {
+                        "product_id": "P333",
+                        "name": "Webcam",
+                        "price": 354.37,
+                        "quantity": 3
+                    },
+                    {
+                        "product_id": "P300",
+                        "name": "Keyboard",
+                        "price": 129.19,
+                        "quantity": 2
+                    }
+                ],
+                "shipping_address": {
+                    "street": "184 Main St",
+                    "city": "Chicago",
+                    "zip": "53983"
+                }
+            },
+            {
+                "order_id": "ORD-718",
+                "total": 880.1,
+                "status": "pending",
+                "items": [
+                    {
+                        "product_id": "P327",
+                        "name": "Monitor",
+                        "price": 213.19,
+                        "quantity": 1
+                    },
+                    {
+                        "product_id": "P301",
+                        "name": "Keyboard",
+                        "price": 394.64,
+                        "quantity": 1
+                    },
+                    {
+                        "product_id": "P314",
+                        "name": "Webcam",
+                        "price": 272.27,
+                        "quantity": 1
+                    }
+                ],
+                "shipping_address": {
+                    "street": "171 Elm St",
+                    "city": "Chicago",
+                    "zip": "11200"
+                }
+            }
+        ],
+        "tags": [
+            "standard",
+            "music-lover",
+            "early-adopter"
+        ]
+    },
+    {
+        "user_id": 5,
+        "name": "Alice Smith",
+        "email": "user5@example.com",
+        "is_active": false,
+        "signup_date": "2023-11-22",
+        "profile": {
+            "age": 37,
+            "location": "Seattle",
+            "preferences": {
+                "theme": "light",
+                "notifications": true,
+                "language": "fr"
+            }
+        },
+        "orders": [
+            {
+                "order_id": "ORD-676",
+                "total": 1327.82,
+                "status": "canceled",
+                "items": [
+                    {
+                        "product_id": "P339",
+                        "name": "Headphones",
+                        "price": 189.86,
+                        "quantity": 1
+                    },
+                    {
+                        "product_id": "P314",
+                        "name": "Monitor",
+                        "price": 207.06,
+                        "quantity": 2
+                    },
+                    {
+                        "product_id": "P392",
+                        "name": "Mouse",
+                        "price": 241.28,
+                        "quantity": 3
+                    }
+                ],
+                "shipping_address": {
+                    "street": "762 Elm St",
+                    "city": "New York",
+                    "zip": "40890"
+                }
+            }
+        ],
+        "tags": [
+            "vip"
+        ]
+    },
+    {
+        "user_id": 6,
+        "name": "Bob Lee",
+        "email": "user6@example.com",
+        "is_active": true,
+        "signup_date": null,
+        "profile": {
+            "age": 30,
+            "location": "New York",
+            "preferences": {
+                "theme": "dark",
+                "notifications": false,
+                "language": "fr"
+            }
+        },
+        "orders": [
+            {
+                "order_id": "ORD-756",
+                "total": 431.53,
+                "status": "delivered",
+                "items": [
+                    {
+                        "product_id": "P366",
+                        "name": "Mouse",
+                        "price": 431.53,
+                        "quantity": 1
+                    }
+                ],
+                "shipping_address": {
+                    "street": "710 Oak Ave",
+                    "city": "Austin",
+                    "zip": "45783"
+                }
+            },
+            {
+                "order_id": "ORD-169",
+                "total": 1952.94,
+                "status": "pending",
+                "items": [
+                    {
+                        "product_id": "P368",
+                        "name": "Mouse",
+                        "price": 157.43,
+                        "quantity": 1
+                    },
+                    {
+                        "product_id": "P397",
+                        "name": "Headphones",
+                        "price": 329.63,
+                        "quantity": 2
+                    },
+                    {
+                        "product_id": "P352",
+                        "name": "Laptop",
+                        "price": 378.75,
+                        "quantity": 3
+                    }
+                ],
+                "shipping_address": {
+                    "street": "519 Oak Ave",
+                    "city": "Chicago",
+                    "zip": "33994"
+                }
+            },
+            {
+                "order_id": "ORD-946",
+                "total": 20.6,
+                "status": "delivered",
+                "items": [
+                    {
+                        "product_id": "P394",
+                        "name": "Monitor",
+                        "price": 10.3,
+                        "quantity": 2
+                    }
+                ],
+                "shipping_address": {
+                    "street": "610 Pine St",
+                    "city": "Boston",
+                    "zip": "24370"
+                }
+            }
+        ],
+        "tags": [
+            "standard"
+        ]
+    },
+    {
+        "user_id": 7,
+        "name": "Grace Johnson",
+        "email": "user7@example.com",
+        "is_active": true,
+        "signup_date": "2023-05-29",
+        "profile": null,
+        "orders": [
+            {
+                "order_id": "ORD-931",
+                "total": 1477.56,
+                "status": "canceled",
+                "items": [
+                    {
+                        "product_id": "P346",
+                        "name": "Headphones",
+                        "price": 346.65,
+                        "quantity": 3
+                    },
+                    {
+                        "product_id": "P363",
+                        "name": "Laptop",
+                        "price": 437.61,
+                        "quantity": 1
+                    }
+                ],
+                "shipping_address": {
+                    "street": "213 Elm St",
+                    "city": "Austin",
+                    "zip": "39638"
+                }
+            }
+        ],
+        "tags": [
+            "music-lover",
+            "premium",
+            "standard"
+        ]
+    },
+    {
+        "user_id": 8,
+        "name": "Frank Davis",
+        "email": "user8@example.com",
+        "is_active": true,
+        "signup_date": "2022-04-20",
+        "profile": {
+            "age": 54,
+            "location": "Austin",
+            "preferences": {
+                "theme": "dark",
+                "notifications": true,
+                "language": "en"
+            }
+        },
+        "orders": [
+            {
+                "order_id": "ORD-494",
+                "total": 650.37,
+                "status": "delivered",
+                "items": [
+                    {
+                        "product_id": "P390",
+                        "name": "Webcam",
+                        "price": 216.79,
+                        "quantity": 3
+                    }
+                ],
+                "shipping_address": {
+                    "street": "768 Elm St",
+                    "city": "Austin",
+                    "zip": "32183"
+                }
+            },
+            {
+                "order_id": "ORD-777",
+                "total": 132.35,
+                "status": "shipped",
+                "items": [
+                    {
+                        "product_id": "P332",
+                        "name": "Headphones",
+                        "price": 132.35,
+                        "quantity": 1
+                    }
+                ],
+                "shipping_address": {
+                    "street": "836 Oak Ave",
+                    "city": "Chicago",
+                    "zip": "94685"
+                }
+            },
+            {
+                "order_id": "ORD-900",
+                "total": 1218.32,
+                "status": "shipped",
+                "items": [
+                    {
+                        "product_id": "P377",
+                        "name": "Webcam",
+                        "price": 355.01,
+                        "quantity": 2
+                    },
+                    {
+                        "product_id": "P315",
+                        "name": "Mouse",
+                        "price": 254.15,
+                        "quantity": 2
+                    }
+                ],
+                "shipping_address": {
+                    "street": "280 Pine St",
+                    "city": "Boston",
+                    "zip": "85908"
+                }
+            }
+        ],
+        "tags": []
+    },
+    {
+        "user_id": 9,
+        "name": "Emma Lee",
+        "email": "user9@example.com",
+        "is_active": false,
+        "signup_date": null,
+        "profile": {
+            "age": 51,
+            "location": "Austin",
+            "preferences": {
+                "theme": "light",
+                "notifications": false,
+                "language": "es"
+            }
+        },
+        "orders": [
+            {
+                "order_id": "ORD-963",
+                "total": 654.28,
+                "status": "delivered",
+                "items": [
+                    {
+                        "product_id": "P359",
+                        "name": "Keyboard",
+                        "price": 133.29,
+                        "quantity": 1
+                    },
+                    {
+                        "product_id": "P358",
+                        "name": "Laptop",
+                        "price": 292.3,
+                        "quantity": 1
+                    },
+                    {
+                        "product_id": "P314",
+                        "name": "Monitor",
+                        "price": 228.69,
+                        "quantity": 1
+                    }
+                ],
+                "shipping_address": {
+                    "street": "304 Oak Ave",
+                    "city": "Austin",
+                    "zip": "68167"
+                }
+            },
+            {
+                "order_id": "ORD-700",
+                "total": 754.48,
+                "status": "delivered",
+                "items": [
+                    {
+                        "product_id": "P321",
+                        "name": "Monitor",
+                        "price": 377.24,
+                        "quantity": 2
+                    }
+                ],
+                "shipping_address": {
+                    "street": "519 Elm St",
+                    "city": "Boston",
+                    "zip": "66293"
+                }
+            }
+        ],
+        "tags": [
+            "standard",
+            "premium",
+            "vip"
+        ]
+    },
+    {
+        "user_id": 10,
+        "name": "Emma Wilson",
+        "email": "user10@example.com",
+        "is_active": true,
+        "signup_date": null,
+        "profile": null,
+        "orders": [
+            {
+                "order_id": "ORD-637",
+                "total": 338.56,
+                "status": "delivered",
+                "items": [
+                    {
+                        "product_id": "P326",
+                        "name": "Keyboard",
+                        "price": 20.58,
+                        "quantity": 3
+                    },
+                    {
+                        "product_id": "P399",
+                        "name": "Webcam",
+                        "price": 138.41,
+                        "quantity": 2
+                    }
+                ],
+                "shipping_address": {
+                    "street": "838 Main St",
+                    "city": "Boston",
+                    "zip": "91370"
+                }
+            }
+        ],
+        "tags": [
+            "standard",
+            "premium"
+        ]
+    },
+    {
+        "user_id": 11,
+        "name": "Grace Johnson",
+        "email": "user11@example.com",
+        "is_active": true,
+        "signup_date": null,
+        "profile": {
+            "age": 38,
+            "location": "New York",
+            "preferences": {
+                "theme": "light",
+                "notifications": false,
+                "language": "en"
+            }
+        },
+        "orders": [
+            {
+                "order_id": "ORD-384",
+                "total": 893.34,
+                "status": "delivered",
+                "items": [
+                    {
+                        "product_id": "P314",
+                        "name": "Webcam",
+                        "price": 180.27,
+                        "quantity": 2
+                    },
+                    {
+                        "product_id": "P364",
+                        "name": "Headphones",
+                        "price": 267.68,
+                        "quantity": 1
+                    },
+                    {
+                        "product_id": "P396",
+                        "name": "Keyboard",
+                        "price": 132.56,
+                        "quantity": 2
+                    }
+                ],
+                "shipping_address": {
+                    "street": "819 Pine St",
+                    "city": "Boston",
+                    "zip": "48383"
+                }
+            }
+        ],
+        "tags": [
+            "premium",
+            "music-lover",
+            "vip"
+        ]
+    },
+    {
+        "user_id": 12,
+        "name": "David Davis",
+        "email": "user12@example.com",
+        "is_active": false,
+        "signup_date": "2022-02-02",
+        "profile": null,
+        "orders": [
+            {
+                "order_id": "ORD-615",
+                "total": 297.14,
+                "status": "pending",
+                "items": [
+                    {
+                        "product_id": "P354",
+                        "name": "Monitor",
+                        "price": 20.5,
+                        "quantity": 1
+                    },
+                    {
+                        "product_id": "P334",
+                        "name": "Monitor",
+                        "price": 276.64,
+                        "quantity": 1
+                    }
+                ],
+                "shipping_address": {
+                    "street": "662 Elm St",
+                    "city": "Boston",
+                    "zip": "59750"
+                }
+            }
+        ],
+        "tags": [
+            "vip"
+        ]
+    },
+    {
+        "user_id": 13,
+        "name": "Carol Davis",
+        "email": "user13@example.com",
+        "is_active": true,
+        "signup_date": "2022-01-30",
+        "profile": {
+            "age": 42,
+            "location": "San Francisco",
+            "preferences": {
+                "theme": "light",
+                "notifications": true,
+                "language": "fr"
+            }
+        },
+        "orders": [
+            {
+                "order_id": "ORD-576",
+                "total": 173.21,
+                "status": "delivered",
+                "items": [
+                    {
+                        "product_id": "P367",
+                        "name": "Headphones",
+                        "price": 173.21,
+                        "quantity": 1
+                    }
+                ],
+                "shipping_address": {
+                    "street": "285 Oak Ave",
+                    "city": "Austin",
+                    "zip": "41201"
+                }
+            },
+            {
+                "order_id": "ORD-440",
+                "total": 982.84,
+                "status": "pending",
+                "items": [
+                    {
+                        "product_id": "P310",
+                        "name": "Mouse",
+                        "price": 491.42,
+                        "quantity": 2
+                    }
+                ],
+                "shipping_address": {
+                    "street": "722 Oak Ave",
+                    "city": "Chicago",
+                    "zip": "97495"
+                }
+            }
+        ],
+        "tags": [
+            "early-adopter"
+        ]
+    },
+    {
+        "user_id": 14,
+        "name": "David Miller",
+        "email": "user14@example.com",
+        "is_active": true,
+        "signup_date": "2024-08-16",
+        "profile": {
+            "age": 58,
+            "location": "Austin",
+            "preferences": {
+                "theme": "light",
+                "notifications": false,
+                "language": "fr"
+            }
+        },
+        "orders": [
+            {
+                "order_id": "ORD-885",
+                "total": 661.4,
+                "status": "pending",
+                "items": [
+                    {
+                        "product_id": "P365",
+                        "name": "Laptop",
+                        "price": 330.7,
+                        "quantity": 2
+                    }
+                ],
+                "shipping_address": {
+                    "street": "720 Pine St",
+                    "city": "Chicago",
+                    "zip": "21964"
+                }
+            },
+            {
+                "order_id": "ORD-123",
+                "total": 692.24,
+                "status": "delivered",
+                "items": [
+                    {
+                        "product_id": "P391",
+                        "name": "Mouse",
+                        "price": 201.91,
+                        "quantity": 1
+                    },
+                    {
+                        "product_id": "P320",
+                        "name": "Laptop",
+                        "price": 490.33,
+                        "quantity": 1
+                    }
+                ],
+                "shipping_address": {
+                    "street": "316 Pine St",
+                    "city": "Austin",
+                    "zip": "50041"
+                }
+            }
+        ],
+        "tags": [
+            "standard",
+            "music-lover",
+            "premium"
+        ]
+    }
+]

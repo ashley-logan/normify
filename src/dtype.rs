@@ -1,4 +1,4 @@
-use crate::error;
+use crate::error::NormError;
 use derive_more::From;
 use serde_json::Value;
 use std::fmt::Display;
@@ -60,18 +60,18 @@ impl Dtype {
         matches!(&self, Dtype::Array(_))
     }
 
-    pub fn into_vec(self) -> Option<Vec<Self>> {
+    pub fn into_vec(self) -> Result<Vec<Self>, NormError> {
         match self {
-            Self::Array(arr) => Some(arr),
-            _ => None,
+            Self::Array(arr) => Ok(arr),
+            _ => Err(NormError::Convert),
         }
     }
 
-    pub fn get_slice<'a>(&'a self) -> Option<&'a [Dtype]> {
+    pub fn get_slice<'a>(&'a self) -> Result<&'a [Dtype], NormError> {
         if let Self::Array(arr) = self {
-            Some(arr.as_slice())
+            Ok(arr.as_slice())
         } else {
-            None
+            Err(NormError::Convert)
         }
     }
 
@@ -95,8 +95,8 @@ impl Dtype {
             .collect()
     }
 
-    pub fn from_value(value: Value) -> Self {
-        match value {
+    pub fn from_value(value: Value) -> Result<Self, NormError> {
+        let r = match value {
             Value::String(s) => Dtype::String(s.to_owned()),
             Value::Null => Dtype::Null,
             Value::Array(arr) => {
@@ -106,7 +106,7 @@ impl Dtype {
                     Dtype::Array(
                         arr.into_iter()
                             .map(Dtype::from_value)
-                            .collect::<Vec<Dtype>>(),
+                            .collect::<Result<Vec<Dtype>, NormError>>()?,
                     )
                 }
             }
@@ -122,9 +122,8 @@ impl Dtype {
                     Dtype::Null
                 }
             }
-            Value::Object(_) => {
-                panic!("Cannot convert type Value::Object into Dtype");
-            }
-        }
+            Value::Object(_) => return Err(NormError::Convert),
+        };
+        Ok(r)
     }
 }

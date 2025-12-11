@@ -1,7 +1,0 @@
-Project Guide:
-    struct options:
-        {
-            Normalizer(Vec<TableData>),
-            ColumnData(field: String, data: Vec<Dtype>),
-            TableData(table_name: String, table: Vec<ColumnData>)
-        }
