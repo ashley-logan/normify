@@ -2,11 +2,12 @@ mod database_builder;
 mod dtype;
 mod error;
 mod normalizer;
+mod parser;
 pub use database_builder::DataBase;
 pub use normalizer::Normifier;
 pub use serde_json::Value;
 
-use crate::error::NormError;
+pub use crate::error::NormError;
 
 pub fn from_value(root_value: Value) -> Result<Normifier, NormError> {
     let mut norm_context: Normifier = Normifier::new();

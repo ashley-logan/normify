@@ -15,3 +15,5 @@ pub enum NormError {
     #[error("{0}")]
     Serde(#[from] serde_json::Error),
 }
+
+pub type Result<T> = std::result::Result<T, NormError>;

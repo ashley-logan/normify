@@ -4,17 +4,17 @@
 // mod database_builder;
 // use database_builder::DataBase;
 // mod dtype;
-use normify::{DataBase, Normifier};
+use normify::{DataBase, NormError, Normifier};
 use serde_json::Value;
 use std::fs;
 use std::io::Read;
 
-
 fn get_payload(filename: &str) -> Value {
-    let path: String = format!("./tests/{}.json",filename);
+    let path: String = format!("./tests/{}.json", filename);
     let mut f = fs::File::open(path).expect("Failed to open test file");
     let mut content: String = String::new();
-    f.read_to_string(&mut content).expect("Failed to read test file to string");
+    f.read_to_string(&mut content)
+        .expect("Failed to read test file to string");
     serde_json::from_str(&content).expect("Failed to parse content into Value type")
 }
 
@@ -48,6 +48,5 @@ fn main_test() {
 #[test]
 fn regular_test() {
     let mut payload: Value = get_payload("test_file");
-    let norm_result = Result<Normifier, serde_json::Error> = normify::from_value(payload);
-    
+    let norm_result: Result<Normifier, NormError> = normify::from_value(payload);
 }

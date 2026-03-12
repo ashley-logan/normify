@@ -1,21 +1,21 @@
-use crate::error::NormError;
+use crate::error::{NormError, Result};
 use derive_more::From;
 use serde_json::Value;
 use std::fmt::Display;
 
 #[derive(Debug, Clone, From)]
-pub enum Dtype {
+pub enum NormValue {
     // wrapper for json primitives
     String(String),
     Float(f64),
     UInt(u64),
     Int(i64),
     Bool(bool),
-    Array(Vec<Dtype>),
+    Array(Vec<NormValue>),
     Null,
 }
 
-impl Display for Dtype {
+impl Display for NormValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Null => write!(f, "null"),
@@ -33,33 +33,33 @@ impl Display for Dtype {
     }
 }
 
-impl Dtype {
+impl NormValue {
     pub fn is_float(&self) -> bool {
-        matches!(&self, Dtype::Float(_))
+        matches!(&self, NormValue::Float(_))
     }
 
     pub fn is_uint(&self) -> bool {
-        matches!(&self, Dtype::UInt(_))
+        matches!(&self, NormValue::UInt(_))
     }
 
     pub fn is_int(&self) -> bool {
-        matches!(&self, Dtype::Int(_))
+        matches!(&self, NormValue::Int(_))
     }
 
     pub fn is_string(&self) -> bool {
-        matches!(&self, Dtype::String(_))
+        matches!(&self, NormValue::String(_))
     }
 
     pub fn is_bool(&self) -> bool {
-        matches!(&self, Dtype::Bool(_))
+        matches!(&self, NormValue::Bool(_))
     }
 
     pub fn is_null(&self) -> bool {
-        matches!(&self, Dtype::Null)
+        matches!(&self, NormValue::Null)
     }
 
     pub fn is_array(&self) -> bool {
-        matches!(&self, Dtype::Array(_))
+        matches!(&self, NormValue::Array(_))
     }
 
     // extract vector from Array type (moves vector)
@@ -71,7 +71,7 @@ impl Dtype {
     }
 
     // extract a slice from Array type (no ownership transfer)
-    pub fn get_slice<'a>(&'a self) -> Result<&'a [Dtype], NormError> {
+    pub fn get_slice<'a>(&'a self) -> Result<&'a [NormValue], NormError> {
         if let Self::Array(arr) = self {
             Ok(arr.as_slice())
         } else {
@@ -80,12 +80,12 @@ impl Dtype {
     }
 
     // returns true if all elements pass the specified type check function or are null
-    pub fn array_is_type(arr: &Vec<Dtype>, check: fn(&Self) -> bool) -> bool {
+    pub fn array_is_type(arr: &Vec<NormValue>, check: fn(&Self) -> bool) -> bool {
         arr.iter().all(|i| check(i) || i.is_null())
     }
 
-    // cast each Dtype object in an array
-    pub fn cast_to_option<T>(values: Vec<Dtype>) -> Vec<Option<T>>
+    // cast each NormValue object in an array
+    pub fn cast_to_option<T>(values: Vec<NormValue>) -> Vec<Option<T>>
     where
         Self: TryInto<T>,
     {
@@ -102,34 +102,36 @@ impl Dtype {
     }
 
     pub fn from_value(value: Value) -> Result<Self, NormError> {
-        let r = match value {
-            Value::String(s) => Dtype::String(s.to_owned()),
-            Value::Null => Dtype::Null,
-            Value::Array(arr) => {
+        let r: NormValue = match value {
+            Value::String(s) => NormValue::String(s.to_owned()),
+            Value::Null => NormValue::Null,
+            Value::Array(mut arr) => {
                 if arr.is_empty() {
-                    Dtype::Array(vec![Dtype::Null])
+                    NormValue::Array(vec![])
                 } else {
-                    Dtype::Array(
+                    NormValue::Array(
                         arr.into_iter()
-                            .map(Dtype::from_value)
-                            .collect::<Result<Vec<Dtype>, NormError>>()?,
+                            .map(NormValue::from_value)
+                            .collect::<Result<Vec<NormValue>, NormError>>()?,
                     )
                 }
             }
-            Value::Bool(b) => Dtype::Bool(b.to_owned()),
+            Value::Bool(b) => NormValue::Bool(b.to_owned()),
             Value::Number(n) => {
-                if n.is_u64() {
-                    Dtype::UInt(n.as_u64().unwrap())
-                } else if n.is_i64() {
-                    Dtype::Int(n.as_i64().unwrap())
-                } else if n.is_f64() {
-                    Dtype::Float(n.as_f64().unwrap())
+                if let Some(i) = n.as_i64() {
+                    NormValue::Int(i)
+                } else if let Some(u) = n.as_u64() {
+                    NormValue::UInt(u)
                 } else {
-                    Dtype::Null
+                    NormValue::Float(n.as_f64().unwrap())
                 }
             }
             Value::Object(_) => return Err(NormError::Convert),
         };
         Ok(r)
     }
+}
+
+fn normify_array(arr: Vec<Value>) -> Vec<NormValue> {
+    todo!()
 }

@@ -1,4 +1,4 @@
-use crate::dtype::Dtype;
+use crate::dtype::NormValue;
 use crate::error::NormError;
 use indexmap::{IndexMap, map::Iter};
 use serde_json::{Map, Value};
@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 #[derive(Debug)]
 pub struct TableData {
-    pub(crate) columns: IndexMap<String, Vec<Dtype>>,
+    pub(crate) columns: IndexMap<String, Vec<NormValue>>,
 }
 
 #[derive(Debug)]
@@ -21,7 +21,7 @@ impl TableData {
             columns: IndexMap::new(),
         }
     }
-    fn extend_column(&mut self, col_name: String, col_data: Dtype) {
+    fn extend_column(&mut self, col_name: String, col_data: NormValue) {
         // pushes a value into its appropriate column vector or creates a new vector
         self.columns
             .entry(col_name)
@@ -29,13 +29,13 @@ impl TableData {
             .push(col_data);
     }
 
-    pub fn iter_columns<'a>(&'a self) -> Iter<'a, String, Vec<Dtype>> {
+    pub fn iter_columns<'a>(&'a self) -> Iter<'a, String, Vec<NormValue>> {
         self.columns.iter()
     }
 
     pub fn iter_items<'a>(
         &'a self,
-    ) -> std::iter::Flatten<indexmap::map::Values<'a, String, Vec<Dtype>>> {
+    ) -> std::iter::Flatten<indexmap::map::Values<'a, String, Vec<NormValue>>> {
         self.columns.values().flatten()
     }
 
@@ -52,7 +52,7 @@ impl Normifier {
         }
     }
 
-    pub fn add_record(&mut self, table_name: String, record: IndexMap<String, Dtype>) {
+    pub fn add_record(&mut self, table_name: String, record: IndexMap<String, NormValue>) {
         // inserts a row of data into its corresponding table
         let table: &mut TableData = self.tables.entry(table_name).or_insert_with(TableData::new);
         for (field, data) in record {
@@ -72,7 +72,7 @@ impl Normifier {
     ) -> Result<(), NormError> {
         // TODO log table name
         // creates a new index map to hold a row of data
-        let mut this_record: IndexMap<String, Dtype> = IndexMap::new();
+        let mut this_record: IndexMap<String, NormValue> = IndexMap::new();
         // creates a new random id for this row
         let this_id = Uuid::now_v7().to_string();
         // this_table.extend_column("id".to_string(), this_id.clone().into());
@@ -88,7 +88,7 @@ impl Normifier {
             match v {
                 Value::Array(arr) => {
                     if arr.is_empty() {
-                        this_record.insert(k.to_string(), Dtype::Null);
+                        this_record.insert(k.to_string(), NormValue::Array(vec![]));
                     }
                     // if the value is an array, this signifies the possible creation of a new table,
                     // where the current table has a one-to-many relationship with the new table
@@ -99,7 +99,7 @@ impl Normifier {
                         self.parse_object_array(&child_table, arr, Some(t_name), Some(&this_id))?
                     } else {
                         // if the array is an array of json primitives, just insert the array into the row container
-                        this_record.insert(k.to_string(), Dtype::from_value(v.to_owned())?);
+                        this_record.insert(k.to_string(), NormValue::from_value(v.to_owned())?);
                     }
                 }
                 Value::Object(child) => {
@@ -110,7 +110,7 @@ impl Normifier {
                 }
                 _ => {
                     // if the type if non-nested, just insert it into the row container
-                    this_record.insert(k.to_string(), Dtype::from_value(v.to_owned())?);
+                    this_record.insert(k.to_string(), NormValue::from_value(v.to_owned())?);
                 }
             }
         }
