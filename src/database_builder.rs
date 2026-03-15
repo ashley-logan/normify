@@ -1,5 +1,5 @@
 use crate::{
-    dtype::Dtype,
+    dtype::NormValue,
     normalizer::{Normifier, TableData},
 };
 use indexmap::IndexMap;
@@ -19,8 +19,8 @@ impl DataBase {
         }
     }
 
-    // convert each item in a vector of Dtypes to a Option<string> or none depending
-    pub fn stringify_collection(collection: Vec<Dtype>) -> Series {
+    // convert each item in a vector of NormValues to a Option<string> or none depending
+    pub fn stringify_collection(collection: Vec<NormValue>) -> Series {
         Series::from_iter(collection.into_iter().map(|x| {
             if x.is_null() {
                 None
@@ -30,8 +30,8 @@ impl DataBase {
         }))
     }
 
-    // takes a vector of vectors of Dtypes and converts each element into a string
-    pub fn stringify_nested_collection(name: String, n_collection: Vec<Vec<Dtype>>) -> Series {
+    // takes a vector of vectors of NormValues and converts each element into a string
+    pub fn stringify_nested_collection(name: String, n_collection: Vec<Vec<NormValue>>) -> Series {
         // todo: max subarray size\
         // gets the length of the largest sub array in the parent vector
         let values_cap: usize = n_collection
@@ -53,8 +53,8 @@ impl DataBase {
     }
 
     // return if the collection has a uniform type
-    pub fn is_normal_collection(determinant: &Dtype, collection: &[Dtype]) -> bool {
-        use Dtype as DT;
+    pub fn is_normal_collection(determinant: &NormValue, collection: &[NormValue]) -> bool {
+        use NormValue as DT;
         match determinant {
             DT::Bool(_) => collection.iter().all(|x| x.is_bool() || x.is_null()),
             DT::UInt(_) => collection.iter().all(|x| x.is_uint() || x.is_null()),
@@ -66,8 +66,8 @@ impl DataBase {
     }
 
     // convert each item into an Option and collect into a series
-    pub fn collection_to_series(determinant: &Dtype, collection: Vec<Dtype>) -> Series {
-        use Dtype as DT;
+    pub fn collection_to_series(determinant: &NormValue, collection: Vec<NormValue>) -> Series {
+        use NormValue as DT;
         match determinant {
             DT::Bool(_) => collection
                 .into_iter()
@@ -98,7 +98,6 @@ impl DataBase {
         }
     }
 
-
     // build a chunked list from a vector of series
     fn build_list_chunked(
         data: Vec<Series>,
@@ -110,36 +109,39 @@ impl DataBase {
         builder.finish()
     }
 
-    fn get_list_builder(determinant: &Dtype, data: &[Vec<Dtype>]) -> Box<dyn ListBuilderTrait> {
+    fn get_list_builder(
+        determinant: &NormValue,
+        data: &[Vec<NormValue>],
+    ) -> Box<dyn ListBuilderTrait> {
         // returns a new list_builder according to columns capacity and the list's inner type and capacity
         let capacity = data.len();
         let values_capacity = data.iter().map(|x| x.len()).max().unwrap_or_default();
         match determinant {
-            &Dtype::Array(_) => panic!("cannot call get_list_builder on array type"),
-            &Dtype::Null => panic!("cannot call get_list_builder on null type"),
-            &Dtype::String(_) => Box::new(ListStringChunkedBuilder::new(
+            &NormValue::Array(_) => panic!("cannot call get_list_builder on array type"),
+            &NormValue::Null => panic!("cannot call get_list_builder on null type"),
+            &NormValue::String(_) => Box::new(ListStringChunkedBuilder::new(
                 PlSmallStr::EMPTY,
                 capacity,
                 values_capacity,
             )),
-            &Dtype::Bool(_) => Box::new(ListBooleanChunkedBuilder::new(
+            &NormValue::Bool(_) => Box::new(ListBooleanChunkedBuilder::new(
                 PlSmallStr::EMPTY,
                 capacity,
                 values_capacity,
             )),
-            &Dtype::UInt(_) => Box::new(ListPrimitiveChunkedBuilder::<UInt64Type>::new(
+            &NormValue::UInt(_) => Box::new(ListPrimitiveChunkedBuilder::<UInt64Type>::new(
                 PlSmallStr::EMPTY,
                 capacity,
                 values_capacity,
                 DataType::UInt64,
             )),
-            &Dtype::Int(_) => Box::new(ListPrimitiveChunkedBuilder::<Int64Type>::new(
+            &NormValue::Int(_) => Box::new(ListPrimitiveChunkedBuilder::<Int64Type>::new(
                 PlSmallStr::EMPTY,
                 capacity,
                 values_capacity,
                 DataType::Int64,
             )),
-            &Dtype::Float(_) => Box::new(ListPrimitiveChunkedBuilder::<Float64Type>::new(
+            &NormValue::Float(_) => Box::new(ListPrimitiveChunkedBuilder::<Float64Type>::new(
                 PlSmallStr::EMPTY,
                 capacity,
                 values_capacity,
@@ -147,36 +149,36 @@ impl DataBase {
             )),
         }
     }
-    /* idea: instead of Dtype enums, create structs that have a shared trait with
+    /* idea: instead of NormValue enums, create structs that have a shared trait with
         custom implemention to allow easy unwrapping, processing, and conversion
     */
 
-    // unwrap a vector of Dtype::Array variants into vectors
-    fn unwrap_nested(nested: Vec<Dtype>) -> Vec<Vec<Dtype>> {
-        if !Dtype::array_is_type(&nested, Dtype::is_array) {
+    // unwrap a vector of NormValue::Array variants into vectors
+    fn unwrap_nested(nested: Vec<NormValue>) -> Vec<Vec<NormValue>> {
+        if !NormValue::array_is_type(&nested, NormValue::is_array) {
             // checks that every element is either an array variant or null variant
             panic!("cannot pass flat vector to unwrap_nested")
         }
         let mut unnested = vec![];
         for sub_array in nested {
-            if let Dtype::Array(a) = sub_array {
+            if let NormValue::Array(a) = sub_array {
                 unnested.push(a);
             } else {
-                unnested.push(vec![Dtype::Null]);
+                unnested.push(vec![NormValue::Null]);
             }
         }
         unnested
     }
-    pub fn build_series(name: String, data: Vec<Dtype>) -> Series {
+    pub fn build_series(name: String, data: Vec<NormValue>) -> Series {
         // todo: handle case where some elements are Uints and other are Ints
         // let the first non-null value in the vector determine the target type for the series
         println!("parsing column {}", name);
-        let determining_element: Dtype = data.iter().find(|&x| !x.is_null()).unwrap().clone();
+        let determining_element: NormValue = data.iter().find(|&x| !x.is_null()).unwrap().clone();
         let normal: bool;
-        if matches!(determining_element, Dtype::Array(_)) {
+        if matches!(determining_element, NormValue::Array(_)) {
             // if data is an vector of array types, find the first non-null element within the flattened data
-            let unnested_data: Vec<Vec<Dtype>> = Self::unwrap_nested(data);
-            let array_determinant: Dtype = unnested_data
+            let unnested_data: Vec<Vec<NormValue>> = Self::unwrap_nested(data);
+            let array_determinant: NormValue = unnested_data
                 .iter()
                 .flatten()
                 .find(|&x| !x.is_null())
@@ -204,7 +206,7 @@ impl DataBase {
             }
         } else {
             println!("column: {} is flat and already normal", name);
-            // if the target type is a Dtype-primitive, check that all elements are of that type as well
+            // if the target type is a NormValue-primitive, check that all elements are of that type as well
             normal = Self::is_normal_collection(&determining_element, data.as_slice());
             if normal {
                 // if data is already normal, cast to a series

@@ -1,8 +1,9 @@
 mod database_builder;
 mod dtype;
 mod error;
+mod helpers;
 mod normalizer;
-mod parser;
+mod trait_impl;
 pub use database_builder::DataBase;
 pub use normalizer::Normifier;
 pub use serde_json::Value;
