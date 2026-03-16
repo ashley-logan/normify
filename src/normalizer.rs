@@ -1,18 +1,11 @@
-use crate::dtype::{NormValue, NormArray, NormType, DataColumn, Column};
 use crate::error::{NormError, Result};
+use crate::helpers::flatten_vec;
 use indexmap::{IndexMap, map::Iter};
 use serde_json::{Map, Value};
 use uuid::Uuid;
+use crate::models::{NormValue, NormArray, NormType, DataColumn, NestedArray, IdColumn, Table};
 
-#[derive(Debug)]
-pub struct TableData {
-    pub(crate) columns: IndexMap<String, Vec<NormValue>>,
-}
 
-pub struct Table {
-    name: String,
-    columns: IndexMap<String, DataColumn>
-}
 
 enum Type {
     OneToMany,
@@ -27,81 +20,74 @@ pub struct Relationship {
 }
 
 pub struct DataBase {
-    pub(crate) tables: Vec<Table>,
+    pub(crate) tables: IndexMap<String, Table>,
     pub(crate) relationships: Vec<Relationship>
 }
 
-impl Table {
-    fn new() -> Self {
-        Self {
-            name: String::new(),
-            columns: IndexMap::new()
-        }
-    }
 
-    fn add(&mut self, field: String, col: DataColumn) {
-        self.columns.insert(field, col);
-    }
-
-    pub fn insert<T: NormType>(&mut self, field: String, item: T) -> Result<()> {
-        self.columns.entry(field).or_insert(NormArray::new::<T>()).push(item);
-        for c in &mut self.columns {
-            if c.get_field().to_owned() == field {
-                match item {
-                    NormValue::Float(f) => c.data.insert_float(f.clone())?,
-                    NormValue::Bool(b) => c.data.insert_bool(b.clone())?,
-                    NormValue::Int(i) => c.data.insert_int(i.clone())?,
-                    NormValue::UInt(u) => c.data.insert_uint(u.clone())?,
-                    NormValue::String(s) => c.data.insert_string(s.clone())?,
-                    NormValue::Null => ()
-                };
-                return Ok(())
-            };
-        }
-        self.columns.push()
-        
-    }
-}
-
-#[derive(Debug)]
-pub struct Normifier {
-    pub(crate) tables: IndexMap<String, TableData>,
-    // relations: Vec<Relationship>,
-}
 
 impl DataBase {
     fn new() -> Self {
         Self {
-            tables: vec![],
+            tables: IndexMap::new(),
             relationships: vec![]
         }
     }
 
-    fn add(&mut self, table: Table, relation: Option<Relationship>) {
-        self.tables.push(table);
+    fn push_table(&mut self, name: String, table: Table, relation: Option<Relationship>) {
+        self.tables.insert(name, table);
         if let Some(r) = relation {
             self.relationships.push(r);
         }
     }
 
+    fn parse_primitive_array(this_table: &mut Table, arr: &Vec<Value>, k: &String) {
+        if arr.is_empty() {
+            todo!("insert null since could field could be foreign key or list columns")
+        }
+
+
+        let mut flat_arr: Vec<Value> = vec![];
+        flatten_vec(arr, &mut flat_arr); // flatten array to only contain json primitives
+
+        flat_arr.retain(|x| !x.is_null()); // remove nulls
+
+
+        if flat_arr.iter().any(|x| matches!(x, Value::String(_))) {
+            let norm_arr: NormArray<String> = flat_arr.iter().map(|x| x.to_string()).collect();
+            this_table.columns.entry(k.to_string()).or_insert(DataColumn::StringListColumn(NestedArray::new())).insert_string_list(norm_arr);
+        } else if flat_arr.iter().all(|x| matches!(x, Value::Bool(_))) {
+            let norm_arr: NormArray<bool> = flat_arr.iter().map(|x| x.as_bool().unwrap()).collect();
+            this_table.columns.entry(k.to_string()).or_insert(DataColumn::BoolListColumn(NestedArray::new())).insert_bool_list(norm_arr);
+        } else if flat_arr.iter().all(|x| matches!(x.as_i64(), Some(i))) {
+            let norm_arr: NormArray<i64> = flat_arr.iter().map(|x| x.as_i64().unwrap()).collect();
+            this_table.columns.entry(k.to_string()).or_insert(DataColumn::IntListColumn(NestedArray::new())).insert_int_list(norm_arr);
+        } else if flat_arr.iter().all(|x| matches!(x.as_f64(), Some(f))) {
+            let norm_arr: NormArray<f64> = flat_arr.iter().map(|x| x.as_f64().unwrap()).collect();
+            this_table.columns.entry(k.to_string()).or_insert(DataColumn::FloatListColumn(NestedArray::new())).insert_float_list(norm_arr);
+
+        }
+    }
+
+
     fn parse_object(
         &mut self,
-        this_table: &Table,
+        this_name: &String,
+        this_table: &mut Table,
         obj: &Map<String, Value>,
         parent_table: Option<&Table>,
-        parent_id: Option<&String>,
-        pt_name: Option<&String>,
+        parent_id: Option<usize>,
+        parent_name: Option<&String>,
     ) -> Result<()> {
         // TODO log table name
-        // creates a new index map to hold a row of data
-        let mut this_record: IndexMap<String, NormValue> = IndexMap::new();
         // creates a new random id for this row
-        let this_id = Uuid::now_v7().to_string();
-        this_table.columns.entry("id".to_string()).or_insert(DataColumn::StringColumn(NormArray::new())).insert_string(this_id.clone());
+        let this_id: usize = this_table.new_id(); // adds a new id to the table's id column and returns it
 
-        if let (Some(pname), Some(pid)) = (pt_name, parent_id) {
-            // if the table this row belongs to has a parent table, insert the parent id as a foreign key
-            this_table.columns.entry(format!("{}_id", pname)).or_insert(DataColumn::StringColumn(NormArray::new())).insert_string(pid.clone());
+
+
+        if let (Some(pname), Some(pid)) = (parent_name, parent_id) {
+            // if this table has a parent table, create the foreign key column if it doesn't exist then add the parent id
+            this_table.fk_columns.entry(pname.to_string()).or_insert(IdColumn::new()).man_insert(pid.clone());
         }
 
         for (k, v) in obj {
@@ -110,25 +96,32 @@ impl DataBase {
                 Value::Array(arr) => {
                     if arr.is_empty() {
                         todo!("insert null since could field could be foreign key or list columns")
-                    }
+                    } 
                     // if the value is an array, this signifies the possible creation of a new table,
                     // where the current table has a one-to-many relationship with the new table
                     else if arr.iter().all(Value::is_object) {
                         // if every item is an object, this value becomes a new table
                         // new table name created from property name
-                        let child_table: String = format!("{}_table", k);
-                        self.parse_object_array(&child_table, arr, Some(t_name), Some(&this_id))?
+                        let child_name: String = format!("{}_table", k);
+                        let mut child_table: &mut Table = self.tables.entry(child_name).or_insert(Table::new());
+
+                        for obj in arr {
+                            self.parse_object(&child_name, &mut child_table, obj.as_object().unwrap(), Some(&this_table), Some(&this_id), Some(this_name));
+                        }
                     } else {
                         // if the array is an array of json primitives, normalize the array and insert in row
-                        todo!("normalize the array")
-                        this_record.insert(k.to_string(), NormValue::from_value(v.to_owned())?);
+                        Self::parse_primitive_array(this_table, arr, k);
                     }
+                    // this_table.columns.insert(k.to_string(), DataColumn::FloatColumn(NormArray::from(vec![f])));
+
                 }
-                Value::Object(child) => {
+                Value::Object(obj) => {
                     // if the value is an object, this is a new table
                     // the current table has a one-to-one relationship with the new table
-                    let new_tname: String = format!("{}_table", k);
-                    self.parse_object(&new_tname, child, Some(&this_id), Some(t_name))?;
+                    let child_name: String = format!("{}_table", k);
+                    let mut child_table: &mut Table = self.tables.entry(child_name).or_insert(Table::new());
+
+                    self.parse_object(&child_name, &mut child_table, obj, Some(&this_table), Some(&this_id), Some(this_name));
                 }
                 Value::Bool(b) => {this_table.columns.entry(k.to_string()).or_insert(DataColumn::BoolColumn(NormArray::new())).insert_bool(b.clone());}
                 Value::String(s) => {this_table.columns.entry(k.to_string()).or_insert(DataColumn::StringColumn(NormArray::new())).insert_string(s.clone());}
@@ -136,25 +129,27 @@ impl DataBase {
                 Value::Number(n) => {
                     if let Some(c) = this_table.columns.get_mut(k) {
                         match c {
-                            DataColumn::FloatColumn(_) => {c.insert_float(n.as_f64()?)}
-                            DataColumn::UintColumn(_) => {c.insert_uint(n.as_u64()?)}
-                            _ => {c.insert_int(n.as_i64()?)}
+                            DataColumn::FloatColumn(_) => {c.insert_float(n.as_f64().ok_or(NormError::Convert)?);}
+                            DataColumn::UintColumn(_) => {c.insert_uint(n.as_u64().ok_or(NormError::Convert)?);}
+                            _ => {c.insert_int(n.as_i64().ok_or(NormError::Convert)?);}
                         }
                     } else if let Some(f)  = n.as_f64() {
-                        this_table.columns.insert(k.to_string(), DataColumn::FloatColumn(NormArray{vec![f]}))
+                        this_table.columns.insert(k.to_string(), DataColumn::FloatColumn(NormArray::from(vec![f])));
                     } else if let Some(i) = n.as_i64() {
-                        this_table.columns.insert(k.to_string(), DataColumn::IntColumn(NormArray{vec![i]}))
+                        this_table.columns.insert(k.to_string(), DataColumn::IntColumn(NormArray::from(vec![i])));
                     } else if let Some(u) = n.as_u64() {
-                        this_table.columns.insert(k.to_string(), DataColumn::UintColumn(NormArray{vec![u]}))
-                    }
-                        
+                        this_table.columns.insert(k.to_string(), DataColumn::UintColumn(NormArray::from(vec![u])));
+                    } 
+                }
+                Value::Null => {
+                    todo!("convert items to options");
+    
                 }
                     
                    
             }
         }
         // transform and add the row container to the current table
-        self.add_record(t_name.to_owned(), this_record);
         Ok(())
     }
 

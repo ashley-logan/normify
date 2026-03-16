@@ -15,7 +15,6 @@ pub(crate) struct UintMarker;
 pub(crate) struct BoolMarker;
 pub(crate) struct StringMarker;
 
-pub(crate) struct NullType;
 
 impl PrimitiveType for FloatMarker {
     type RustPrimitive = f64;

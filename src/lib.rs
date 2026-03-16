@@ -2,6 +2,7 @@ mod database_builder;
 mod dtype;
 mod error;
 mod helpers;
+mod models;
 mod normalizer;
 mod trait_impl;
 pub use database_builder::DataBase;
