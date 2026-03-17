@@ -3,7 +3,7 @@ use crate::helpers::flatten_vec;
 use indexmap::{IndexMap, map::Iter};
 use serde_json::{Map, Value};
 use uuid::Uuid;
-use crate::models::{NormValue, NormArray, NormType, DataColumn, NestedArray, IdColumn, Table};
+use crate::models::{NormArray, NormType, DataColumn, NestedArray, IdColumn, Table, NullMarker};
 
 
 
@@ -61,10 +61,10 @@ impl DataBase {
             this_table.columns.entry(k.to_string()).or_insert(DataColumn::BoolListColumn(NestedArray::new())).insert_bool_list(norm_arr);
         } else if flat_arr.iter().all(|x| matches!(x.as_i64(), Some(i))) {
             let norm_arr: NormArray<i64> = flat_arr.iter().map(|x| x.as_i64().unwrap()).collect();
-            this_table.columns.entry(k.to_string()).or_insert(DataColumn::IntListColumn(NestedArray::new())).insert_int_list(norm_arr);
+            this_table.columns.entry(k.to_string()).or_insert(DataColumn::IntListColumn(NestedArray::new())).int_push_list(norm_arr);
         } else if flat_arr.iter().all(|x| matches!(x.as_f64(), Some(f))) {
             let norm_arr: NormArray<f64> = flat_arr.iter().map(|x| x.as_f64().unwrap()).collect();
-            this_table.columns.entry(k.to_string()).or_insert(DataColumn::FloatListColumn(NestedArray::new())).insert_float_list(norm_arr);
+            this_table.columns.entry(k.to_string()).or_insert(DataColumn::FloatListColumn(NestedArray::new())).float_push_list(norm_arr);
 
         }
     }
@@ -81,13 +81,13 @@ impl DataBase {
     ) -> Result<()> {
         // TODO log table name
         // creates a new random id for this row
-        let this_id: usize = this_table.new_id(); // adds a new id to the table's id column and returns it
+        let this_id: u64 = this_table.new_id(); // adds a new id to the table's id column and returns it
 
 
 
         if let (Some(pname), Some(pid)) = (parent_name, parent_id) {
             // if this table has a parent table, create the foreign key column if it doesn't exist then add the parent id
-            this_table.fk_columns.entry(pname.to_string()).or_insert(IdColumn::new()).man_insert(pid.clone());
+            this_table.fk_columns.entry(pname.to_string()).or_insert(IdColumn::new()).man_insert(pid.clone().into());
         }
 
         for (k, v) in obj {
@@ -129,10 +129,10 @@ impl DataBase {
                 Value::Number(n) => {
                     if let Some(c) = this_table.columns.get_mut(k) {
                         match c {
-                            DataColumn::FloatColumn(_) => {c.insert_float(n.as_f64().ok_or(NormError::Convert)?);}
-                            DataColumn::UintColumn(_) => {c.insert_uint(n.as_u64().ok_or(NormError::Convert)?);}
-                            _ => {c.insert_int(n.as_i64().ok_or(NormError::Convert)?);}
-                        }
+                            DataColumn::FloatColumn(_) => {c.float_push(n.as_f64().ok_or(NormError::Convert)?);}
+                            DataColumn::UintColumn(_) => {c.uint_push(n.as_u64().ok_or(NormError::Convert)?);}
+                            _ => {c.int_push(n.as_i64().ok_or(NormError::Convert)?);}
+                        };
                     } else if let Some(f)  = n.as_f64() {
                         this_table.columns.insert(k.to_string(), DataColumn::FloatColumn(NormArray::from(vec![f])));
                     } else if let Some(i) = n.as_i64() {
@@ -142,7 +142,11 @@ impl DataBase {
                     } 
                 }
                 Value::Null => {
-                    todo!("convert items to options");
+                    if let Some(c) = this_table.columns.get_mut(k) {
+                        c.null_push();
+                    } else {
+                        this_table.columns.insert(k.to_string(), DataColumn::UnknownColumn(vec![NullMarker]));
+                    }
     
                 }
                     

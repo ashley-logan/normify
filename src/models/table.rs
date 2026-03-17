@@ -27,7 +27,7 @@ impl Table {
         fk_field
     }
 
-    pub fn new_id(&mut self) -> usize {
+    pub fn new_id(&mut self) -> u64 {
         self.id_column.auto_insert()
     }
 }
