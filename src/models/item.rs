@@ -1,9 +1,24 @@
+use crate::models::traits::{ItemTrait, NormType};
 use derive_more::{Display, From};
+use serde_json::Value;
 
-use crate::models::traits::NormType;
+macro_rules! impl_itemtrait {
+    ($ty:ty) => {
+        impl ItemTrait for $ty {
+            fn as_serde_value(self) -> Value {
+                self.into::<Value>()
+            }
+        }
+    };
+}
+impl_itemtrait!(i64);
+impl_itemtrait!(u64);
+impl_itemtrait!(f64);
+impl_itemtrait!(bool);
+impl_itemtrait!(String);
 
 #[derive(PartialEq, From, Clone, Debug, Display)]
-pub enum Item<T: NormType> {
+pub enum Item<T: ItemTrait> {
     Data(T),
     #[display("null")]
     #[from(ignore)]

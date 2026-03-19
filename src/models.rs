@@ -1,12 +1,14 @@
 mod columns;
+mod database;
 mod item;
 mod nested_array;
 mod norm_array;
 mod table;
 mod traits;
 pub use columns::{DataColumn, IdColumn};
+pub use database::Database;
 pub use item::{Item, ListType, NullMarker};
-pub use nested_array::NestedArray;
-pub use norm_array::NormArray;
+pub use nested_array::ListArray;
+pub use norm_array::{NormArray, UnknownArray};
 pub use table::Table;
-pub use traits::{ArrayTrait, NormType};
+pub use traits::{ArrayTrait, ItemTrait};

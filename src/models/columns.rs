@@ -63,6 +63,11 @@ impl IdColumn {
         Self(IndexSet::new())
     }
 
+    pub(crate) fn from_id(id: u64) -> Self {
+        let mut set: IndexSet<u64> = IndexSet::new();
+        set.insert(id);
+        Self(set)
+    }
     pub(crate) fn man_insert(&mut self, id: u64) -> bool {
         self.0.insert(id)
     }

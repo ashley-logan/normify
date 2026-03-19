@@ -1,52 +1,45 @@
-use crate::models::norm_array::NormArray;
-use crate::models::traits::NormType;
-use crate::models::{Item, ListType};
+use crate::models::ArrayTrait;
+use std::any::Any;
 
-macro_rules! impl_arraytrait_nestedarray {
-    ($ty:ty) => {
-        impl ArrayTrait for NestedArray<$ty> {
-            type ItemInner = $ty;
-            fn add_item(&mut self, item: Item<$ty>) {
-                self.lists.push(NormArray::from_item(item));
-            }
-        }
-    };
+#[derive(Clone)]
+pub struct ListArray<T: ArrayTrait> {
+    lists: Vec<T>,
 }
 
-pub struct NestedArray<T: NormType> {
-    lists: Vec<NormArray<T>>,
-}
-
-impl_arraytrait_nestedarray!(f64);
-impl_arraytrait_nestedarray!(i64);
-impl_arraytrait_nestedarray!(u64);
-impl_arraytrait_nestedarray!(bool);
-impl_arraytrait_nestedarray!(String);
-
-impl<T: NormType> NestedArray<T> {
-    pub(crate) fn new() -> Self {
-        Self { lists: vec![] }
+impl<T: ArrayTrait> ArrayTrait for ListArray<T> {
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 
-    pub(crate) fn from(arr: NormArray<T>) -> Self {
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+
+    fn len(&self) -> usize {
+        self.lists.len()
+    }
+
+    fn count_data(&self) -> usize {
+        self.lists.iter().filter(|&x| x.count_data() > 0).count()
+    }
+
+    fn count_nulls(&self) -> usize {
+        self.lists.iter().filter(|&x| x.count_data() == 0).count()
+    }
+}
+
+impl<T: ArrayTrait> ListArray<T> {
+    pub fn new() -> Self {
+        Self {
+            lists: Vec::new::<T>(),
+        }
+    }
+
+    pub fn from_arr(arr: T) -> Self {
         Self { lists: vec![arr] }
     }
 
-    pub fn push(&mut self, list: NormArray<T>) {
-        self.lists.push(list)
-    }
-
-    pub fn len(&self) -> usize {
-        self.lists.len()
-    }
-}
-
-impl<T: NormType> FromIterator<NormArray<T>> for NestedArray<T> {
-    fn from_iter<I: IntoIterator<Item = NormArray<T>>>(iter: I) -> Self {
-        let mut arr = NestedArray::new();
-        for item in iter {
-            arr.push(item);
-        }
-        arr
+    pub fn push_arr(&mut self, arr: T) {
+        self.lists.push(arr)
     }
 }
