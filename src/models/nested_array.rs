@@ -1,9 +1,22 @@
-use crate::models::ArrayTrait;
+use crate::{
+    NormArray,
+    models::{ArrayTrait, UnknownArray},
+};
 use std::any::Any;
 
 #[derive(Clone)]
 pub struct ListArray<T: ArrayTrait> {
     lists: Vec<T>,
+}
+
+pub trait NestedTrait: ArrayTrait {
+    pub fn recursive_len(&self) -> usize;
+}
+
+impl<T: ArrayTrait> NestedTrait for ListArray<T> {
+    fn recursive_len(&self) -> usize {
+        self.lists.iter().map(T::len).sum()
+    }
 }
 
 impl<T: ArrayTrait> ArrayTrait for ListArray<T> {

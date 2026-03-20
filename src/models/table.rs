@@ -1,5 +1,6 @@
-use crate::models::{ArrayTrait, DataColumn, ListArray, IdColumn, Item, ItemTrait, NormArray, UnknownArray};
+use crate::models::{ArrayTrait, DataColumn, ListArray, IdColumn, Item, ItemTrait, NormArray, UnknownArray, NestedTrait};
 use crate::error::{NormError, Result};
+use crate::models::type_aliases::*;
 use indexmap::IndexMap;
 
 // pub struct Table {
@@ -63,9 +64,18 @@ impl Table {
 
 
     pub fn col_push_null(&mut self, field: &String) -> Result<()> {
-        if let Some(arr) = self.data_cols.get(field) {
-            if arr.count_data() > 0 {
-                // column exists and has a known type
+        if let Some(arr) = self.data_cols.get(field) { // if column exists...
+
+            if arr.count_data() > 0 { // if column has non-null entries...
+                
+
+                if let Some(b_nested) = arr.as_any_mut().downcast_mut::<ListArray<NormArray<bool>>>() {
+                    b_nested.push_arr(NormArray::new());
+                } else if let Some(s_nested) = arr.as_any_mut().downcast_mut::<ListArray<NormArray<String>>>() {
+                    s_nested.push_arr(NormArray::new());
+                }
+
+                // try downcasting as each NormArray type and pushing Item<T>::Null
                 if let Some(b_arr) = arr.as_any_mut().downcast_mut::<NormArray<bool>>() {
                     b_arr.push_null();
                 } else if let Some(s_arr) = arr.as_any_mut().downcast_mut::<NormArray<String>>() {
@@ -99,12 +109,12 @@ impl Table {
     pub fn insert_fk(&mut self, parent_name: String, parent_id: u64) -> String {
         // insert a new foreign key column into the table and return the column's name
         let fk_field: String = format!("{}_id", parent_name);
-        self.fk_columns.insert(fk_field.clone(), IdColumn::from_id(parent_id));
+        self.fk_cols.entry(fk_field).or_insert_with(IdColumn::new).man_insert(parent_id);
         fk_field
     }
 
     pub fn new_id(&mut self) -> u64 {
-        self.id_column.auto_insert()
+        self.id_col.auto_insert()
     }
 
     pub fn get_mut_col(&mut self, field: &String) -> Option<&Box<dyn ArrayTrait>> {
