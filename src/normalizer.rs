@@ -107,7 +107,7 @@ impl DataBase {
                         let mut child_table: &mut Table = self.tables.entry(child_name).or_insert(Table::new());
 
                         for obj in arr {
-                            self.parse_object(&child_name, &mut child_table, obj.as_object().unwrap(), Some(&this_table), Some(&this_id), Some(this_name));
+                            // self.parse_object(&child_name, &mut child_table, obj.as_object().unwrap(), Some(&this_table), Some(&this_id), Some(this_name));
                         }
                     } else {
                         // if the array is an array of json primitives, normalize the array and insert in row
@@ -122,7 +122,7 @@ impl DataBase {
                     let child_name: String = format!("{}_table", k);
                     let mut child_table: &mut Table = self.tables.entry(child_name).or_insert(Table::new());
 
-                    self.parse_object(&child_name, &mut child_table, obj, Some(&this_table), Some(&this_id), Some(this_name));
+                    // self.parse_object(&child_name, &mut child_table, obj, Some(&this_table), Some(&this_id), Some(this_name));
                 }
                 Value::Bool(b) => {this_table.columns.entry(k.to_string()).or_insert(DataColumn::BoolColumn(NormArray::new())).insert_bool(b.clone());}
                 Value::String(s) => {this_table.columns.entry(k.to_string()).or_insert(DataColumn::StringColumn(NormArray::new())).insert_string(s.clone());}

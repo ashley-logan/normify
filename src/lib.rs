@@ -7,9 +7,11 @@ mod trait_impl;
 pub use database_builder::DataBase;
 pub use helpers::normalize_arr;
 pub use normalizer::Normifier;
+use polars::chunked_array::float;
 pub use serde_json::{Map, Value};
 
 pub use crate::error::NormError;
+use crate::models::UnknownArray;
 pub use crate::models::{
     Database, IdColumn, Item, ItemTrait, ListArray, NormArray, Table, type_aliases::*,
 };
@@ -28,15 +30,16 @@ fn parse_obj(
     let curr_id: u64 = curr_table.new_id(); // push auto generated id for new row and store in curr_id
 
     if let (Some(pid), Some(pname)) = (parent_id, parent_tname) {
-        // if curr_table is a child of Table: parent_name, then push parent id for foreign key column
+        // if curr_table is a child of Table=parent_name, then push parent id for foreign key column
         // foreign key column is created if needed
         curr_table.insert_fk(parent_name.to_string(), pid);
     }
 
     for (k, v) in obj {
-        let mut maybe_col = curr_table.get_mut_col(k);
+        // let mut maybe_col = curr_table.get_mut_col(k);
 
         match v {
+            // match on Value variant
             Value::Bool(b) => {
                 // Bool variant => push Data(bool)
                 curr_table.col_push_item(k, Item::Data(*b))?;
@@ -46,26 +49,35 @@ fn parse_obj(
                 curr_table.col_push_item(k, Item::Data(s.to_string()))?;
             }
             Value::Null => {
-                // Null variant => push
+                // Null variant => push Item::Null
                 curr_table.col_push_null(k)?;
             }
             Value::Number(n) => {
+                // Number variant => try converting to (impl ItemTrait) number types
                 if let Some(i) = n.as_i64() {
+                    // try i64
                     curr_table.col_push_item(k, Item::Data(i))?;
                 } else if let Some(u) = n.as_u64() {
+                    // try u64
                     curr_table.col_push_item(k, Item::Data(u))?;
                 } else if let Some(f) = n.as_f64() {
+                    // fallback to f64
                     curr_table.col_push_item(k, Item::Data(f))?;
                 } else {
+                    // number must be > u64::MAX, for now raise error until implemented
                     return Err(NormError::Convert);
                 }
             }
             Value::Array(arr) => {
+                // Array variant => check inner Value variants
+
                 if arr.iter().all(Value::is_object) {
+                    // array of objects implies a new child table
                     let child_name: String = format!("{}_table", k);
                     db.insert_table(child_name.clone(), Table::new());
 
                     for child_obj in arr {
+                        // parse each object in array, with curr_table of the caller as the parent_table of the call
                         parse_obj(
                             db,
                             &child_name,
@@ -74,49 +86,36 @@ fn parse_obj(
                             Some(table_name),
                         );
                     }
+                } else if arr.iter().any(Value::is_object) {
+                    // if json primitives mixed with json objects in the array the file is invalid json
+                    return Err(NormError::Parse);
                 } else {
-                    let n_arr = normalize_arr(arr);
+                    // column is a ListArray
+                    let n_arr = normalize_arr(arr); // homogenize array and convert innner types to Item<T>
+
+                    // try downcasting as each array type after normalizing
 
                     if let Some(int_arr) = n_arr.as_any().downcast_ref::<NormArray<i64>>() {
-                        let c: &mut ListArray<i64> = curr_table
-                            .get_mut_or_insert(k, Box::new(ListArray::new::<NormArray<i64>>()))
-                            .as_any_mut()
-                            .downcast_mut()
-                            .unwrap();
-                        c.push_arr(int_arr.clone());
+                        curr_table.col_push_list::<NormArray<i64>>(k, int_arr);
+                        // entry is NormArray<i64>
                     } else if let Some(uint_arr) = n_arr.as_any().downcast_ref::<NormArray<u64>>() {
-                        let c: &mut ListArray<u64> = curr_table
-                            .get_mut_or_insert(k, Box::new(ListArray::new::<NormArray<u64>>()))
-                            .as_any_mut()
-                            .downcast_mut()
-                            .unwrap();
-                        c.push_arr(uint_arr.clone());
+                        // entry is NormArray<u64>
+                        curr_table.col_push_list::<NormArray<u64>>(k, uint_arr);
                     } else if let Some(float_arr) = n_arr.as_any().downcast_ref::<NormArray<f64>>()
                     {
-                        let c: &mut ListArray<f64> = curr_table
-                            .get_mut_or_insert(k, Box::new(ListArray::new::<NormArray<f64>>()))
-                            .as_any_mut()
-                            .downcast_mut()
-                            .unwrap();
-                        c.push_arr(float_arr.clone());
+                        // entry is NormArray<f64>
+                        curr_table.col_push_list::<NormArray<f64>>(k, float_arr);
                     } else if let Some(bool_arr) = n_arr.as_any().downcast_ref::<NormArray<bool>>()
                     {
-                        let c: &mut ListArray<bool> = curr_table
-                            .get_mut_or_insert(k, Box::new(ListArray::new::<NormArray<bool>>()))
-                            .as_any_mut()
-                            .downcast_mut()
-                            .unwrap();
-                        c.push_arr(bool_arr.clone());
+                        // entry is NormArray<bool>
+                        curr_table.col_push_list::<NormArray<bool>>(k, bool_arr);
                     } else if let Some(string_arr) =
                         n_arr.as_any().downcast_ref::<NormArray<String>>()
                     {
-                        let c: &mut ListArray<String> = curr_table
-                            .get_mut_or_insert(k, Box::new(ListArray::new::<NormArray<String>>()))
-                            .as_any_mut()
-                            .downcast_mut()
-                            .unwrap();
-                        c.push_arr(string_arr.clone());
-                    } else {
+                        // entry is NormArray<String>
+                        curr_table.col_push_list::<NormArray<String>>(k, string_arr);
+                    } else if let Some(null_arr) = n_arr.as_any().downcast_ref::<UnknownArray>() {
+                        curr_table.col_push_list::<UnknownArray>(k, null_arr);
                     }
                 }
             }
