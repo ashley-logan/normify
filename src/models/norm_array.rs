@@ -1,52 +1,36 @@
-use uuid::serde;
+use crate::models::{ColumnType, ItemTrait, , SimpleArrayType};
+use crate::models::{Item, type_aliases::*};
+use crate::{NormError};
 
-use crate::NormError;
-use crate::models::{ArrayTrait, ItemTrait};
-use crate::models::{Item, NullMarker};
 
-// macro_rules! impl_arraytrait_normarray {
-//     (
-//         $ty:ty
-//     ) => {
-//         impl ArrayTrait for NormArray<$ty> {
-//             fn len(&self) -> usize {
-//                 self.items.len()
-//             }
+macro_rules! impl_try_cast {
+    ($ref_method:ident, $move_method:ident, $ty:ty) => {
+        fn $ref_method(&mut self) -> Option<&mut $ty> {
+            self.as_any_mut().downcast_mut::<$ty>()
+        }
 
-//             fn count_data(&self) -> usize {
-//                 self.items
-//                     .iter()
-//                     .filter(|&x| matches!(x, Item::Data(_)))
-//                     .count()
-//             }
-
-//             fn count_nulls(&self) -> usize {
-//                 self.items
-//                     .iter()
-//                     .filter(|x| matches!(x, Item::Null))
-//                     .count()
-//             }
-//         }
-//     };
-// }
+        fn $move_method(self: Box<Self>) -> Option<Box<$ty>> {
+            self.into_any().downcast::<$ty>().ok()
+        }
+    };
+}
 
 #[derive(Clone)]
 pub struct NormArray<T: ItemTrait> {
     items: Vec<Item<T>>,
 }
 
-#[derive(Clone)]
-pub(crate) struct UnknownArray {
-    nulls: Vec<NullMarker>,
-}
-
 use std::any::Any;
-impl<T: ItemTrait> ArrayTrait for NormArray<T> {
+impl<T: ItemTrait + 'static> ColumnType for NormArray<T> {
     fn as_any(&self) -> &dyn Any {
         self
     }
 
     fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+
+    fn into_any(self: Box<Self>) -> Box<dyn Any> {
         self
     }
 
@@ -67,60 +51,39 @@ impl<T: ItemTrait> ArrayTrait for NormArray<T> {
             .filter(|&x| matches!(x, Item::Null))
             .count()
     }
+
+
+    impl_try_cast!(as_bool_column, into_bool_column, BoolColumn);
+    impl_try_cast!(as_string_column, into_string_column, StringColumn);
+    impl_try_cast!(as_int_column, into_int_column, IntColumn);
+    impl_try_cast!(as_uint_column, into_uint_column, UintColumn);
+    impl_try_cast!(as_float_column, into_float_column, FloatColumn);
+
 }
 
-impl ArrayTrait for UnknownArray {
-    fn as_any(&self) -> &dyn Any {
-        self
+impl<T: ItemTrait> SimpleArrayType for NormArray<T> {
+    fn new() -> Self {
+        Self { items: Vec::new() }
     }
-
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
+    fn is_known(&self) -> bool {
+        true
     }
-
-    fn len(&self) -> usize {
-        self.nulls.len()
-    }
-
-    fn count_data(&self) -> usize {
-        0
-    }
-
-    fn count_nulls(&self) -> usize {
-        self.nulls.len()
-    }
-}
-
-impl UnknownArray {
-    pub fn new() -> Self {
-        Self { nulls: vec![] }
-    }
-
-    pub fn add_null(&mut self) {
-        self.nulls.push(NullMarker)
-    }
-
-    pub fn new_with_null() -> Self {
-        Self {
-            nulls: vec![NullMarker],
-        }
-    }
-
-    pub fn into_column<T: ItemTrait>(self, item: Item<T>) -> NormArray<T> {
-        let mut arr: NormArray<T> = NormArray::new();
-        for _ in self.len() {
-            arr.push_null();
-        }
-        arr.push_item(item);
-        arr
+    fn push_null(&mut self) {
+        self.items.push(Item::Null);
     }
 }
 
-// impl_arraytrait_normarray!(f64);
-// impl_arraytrait_normarray!(i64);
-// impl_arraytrait_normarray!(u64);
-// impl_arraytrait_normarray!(bool);
-// impl_arraytrait_normarray!(String);
+impl<T: ItemTrait> From<Item<T>> for NormArray<T> {
+    fn from(value: Item<T>) -> Self {
+        Self { items: vec![value] }
+    }
+}
+
+// impl_ColumnType_normarray!(f64);
+// impl_ColumnType_normarray!(i64);
+// impl_ColumnType_normarray!(u64);
+// impl_ColumnType_normarray!(bool);
+// impl_ColumnType_normarray!(String);
 
 impl<T: ItemTrait> NormArray<T> {
     pub(crate) fn new() -> Self {
@@ -139,25 +102,25 @@ impl<T: ItemTrait> NormArray<T> {
         }
     }
 
-    pub(crate) fn from_vec_values<T>(v: Vec<serde_json::Value>) -> Result<Self<T>>
-    where
-        T: ItemTrait,
-        serde_json::Value: TryInto<T>,
-        T: TryFrom<serde_json::Value>,
-    {
-        let mut item_v: Vec<Item<T>> = vec![];
-        let mut arr: NormArray<T> = NormArray::new();
-        for val in v {
-            if matches!(val, serde_json::Value::Null) {
-                arr.push_null();
-            } else if let Ok(prim) = val.try_into::<T>() {
-                arr.push_prim(prim);
-            } else {
-                return Err(NormError::Convert);
-            }
-        }
-        Ok(arr)
-    }
+    // pub(crate) fn from_vec_values<T>(v: Vec<serde_json::Value>) -> Result<Self<T>>
+    // where
+    //     T: ItemTrait,
+    //     serde_json::Value: TryInto<T>,
+    //     T: TryFrom<serde_json::Value>,
+    // {
+    //     let mut item_v: Vec<Item<T>> = vec![];
+    //     let mut arr: NormArray<T> = NormArray::new();
+    //     for val in v {
+    //         if matches!(val, serde_json::Value::Null) {
+    //             arr.push_null();
+    //         } else if let Ok(prim) = val.try_into::<T>() {
+    //             arr.push_prim(prim);
+    //         } else {
+    //             return Err(NormError::Convert);
+    //         }
+    //     }
+    //     Ok(arr)
+    // }
 
     pub fn push_item(&mut self, item: Item<T>) {
         self.items.push(item)
@@ -178,8 +141,6 @@ impl<T: ItemTrait> NormArray<T> {
     pub fn is_empty(&self) -> bool {
         self.items.is_empty()
     }
-
-    pub fn from_nulls(null_arr: UnknownArray) -> Self {}
 }
 
 impl<T: ItemTrait> FromIterator<Item<T>> for NormArray<T> {

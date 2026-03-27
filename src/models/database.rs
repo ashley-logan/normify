@@ -1,4 +1,4 @@
-use crate::models::{ArrayTrait, Table};
+use crate::models::{ColumnType, Table};
 use indexmap::IndexMap;
 
 pub struct Database {
@@ -16,7 +16,20 @@ impl Database {
         self.tables.get_mut(name)
     }
 
-    pub fn insert_table(&mut self, name: String, table: Table) {
+    pub fn get_mut_table_or_create(&mut self, name: &String) -> &mut Table {
+        if let Some(tbl) = self.get_mut_table(name) {
+            tbl
+        } else {
+            self.add_table(name.to_string());
+            self.get_mut_table(name).unwrap()
+        }
+    }
+
+    pub fn add_table(&mut self, name: String) {
+        self.tables.insert(name, Table::new());
+    }
+
+    pub fn replace_table(&mut self, name: String, table: Table) {
         self.tables.insert(name, table);
     }
 

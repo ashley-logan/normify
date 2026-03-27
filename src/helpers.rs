@@ -1,36 +1,27 @@
 use crate::error::Result;
-use crate::models::{ArrayTrait, Item, ListArray, NormArray, NormErrorm, UnknownArray};
+use crate::models::{ColumnType, Item, NormArray, SimpleArrayType, UnknownArray};
 use indexmap::IndexMap;
 use serde_json::Value;
 use std::any::Any;
 
-pub fn flatten(arr: &Vec<Value>) -> Result<Vec<Value>> {
-    fn flatten_array(this_arr: &Vec<Value>, flat_arr: &mut Vec<Value>) {
+// takes a slice of values and returns an owned vectored with all Value::Array items flattened
+pub fn flatten(arr: &[Value]) -> Vec<Value> {
+    fn flatten_array(this_arr: &[Value], flat_arr: &mut Vec<Value>) {
         for x in this_arr {
             match x {
-                Value::Array(inner_arr) => flatten_arr(inner_arr, flat_arr),
+                Value::Array(inner_arr) => flatten_array(inner_arr, flat_arr),
                 _ => flat_arr.push(x.clone()),
             }
         }
     }
-    let mut flat_arr: Vec<Value> = vec![];
-    flatten_array(arr, &mut flat_arr)?;
-    Ok(flat_arr)
+    let mut flat_arr: Vec<Value> = Vec::new();
+    flatten_array(arr, &mut flat_arr);
+    flat_arr
 }
 
-fn flatten_array(arr: &Vec<Value>, flat_arr: &mut Vec<Value>) {
-    for x in arr {
-        match x {
-            Value::Array(inner_arr) => flatten_arr(inner_arr, flat_arr),
-            _ => flat_arr.push(x.clone()),
-        }
-    }
-}
-
-// converts a NON_NESTED vector of Values (not Value::Object, Value::Array) to some NormArray or UnknownArray
-// resulting array necessarilly upcasted as dyn ArrayTrait
-// if all values cannot be cast to single type then values are represented as strings -> NormArray<String> as Box<dyn ArrayTrait>
-pub fn normalize_arr(arr: &Vec<Value>) -> Result<Box<dyn ArrayTrait>> {
+// resulting array necessarilly upcasted as dyn ColumnType
+// if all values cannot be cast to single type then values are represented as strings -> NormArray<String> as Box<dyn ColumnType>
+pub fn normalize_arr(arr: &[Value]) -> Result<Box<dyn ColumnType>> {
     if arr.iter().any(Value::is_object) {
         // array cannot contain object Value variants
         return Err(crate::NormError::Convert);
@@ -41,7 +32,7 @@ pub fn normalize_arr(arr: &Vec<Value>) -> Result<Box<dyn ArrayTrait>> {
         return Ok(Box::new(UnknownArray::new()));
     }
 
-    let mut flat_arr = flatten(arr)?;
+    let mut flat_arr: Vec<Value> = flatten(arr); // get flattened array
 
     if flat_arr.iter().all(|x| x.as_str().is_some() || x.is_null()) {
         // every Value can be cast to Item<String>

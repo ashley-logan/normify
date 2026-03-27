@@ -1,17 +1,12 @@
-use crate::models::{ArrayTrait, DataColumn, ListArray, IdColumn, Item, ItemTrait, NormArray, UnknownArray, NestedTrait};
 use crate::error::{NormError, Result};
-use crate::models::type_aliases::*;
+use crate::models::{
+    ColumnType, IdColumn, Item, ItemTrait, NestedArray, NormArray, SimpleArrayType, UnknownArray,
+};
 use indexmap::IndexMap;
-
-// pub struct Table {
-//     pub(crate) id_column: IdColumn,
-//     pub(crate) columns: IndexMap<String, DataColumn>,
-//     pub(crate) fk_columns: IndexMap<String, IdColumn>,
-// }
 
 pub struct Table {
     pub id_col: IdColumn,
-    pub data_cols: IndexMap<String, Box<dyn ArrayTrait>>,
+    pub data_cols: IndexMap<String, Box<dyn ColumnType>>,
     pub fk_cols: IndexMap<String, IdColumn>,
 }
 
@@ -24,54 +19,104 @@ impl Table {
         }
     }
 
-    // pub fn insert_col(&mut self, field: String, col: Box<dyn ArrayTrait>) {
-    //     self.columns.insert(field, col);
-    // }
-
-    pub fn insert_col<T: ItemTrait>(&mut self, field: String, arr: NormArray<T>) {
-        self.data_cols.insert(field, Box::new(arr));
-    }
-
-    pub fn insert(&mut self, field: String, col: Box<dyn ArrayTrait>) {
+    pub fn insert_col(&mut self, field: String, col: Box<dyn ColumnType>) {
         self.data_cols.insert(field, col);
     }
 
-    pub fn get_mut_or_insert(&mut self, field: &String, default: Box<dyn ArrayTrait>) -> &mut Box<dyn ArrayTrait> {
+    pub fn replace_col(
+        &mut self,
+        field: &String,
+        new_data: Box<dyn ColumnType>,
+    ) -> Option<Box<dyn ColumnType>> {
+        if let Some(old) = self.data_cols.get(field) {
+            self.data_cols.insert(field.clone(), new_data)
+        } else {
+            Option::None
+        }
+    }
+
+    // pub fn replace_unknown_col(&mut self, field: &String, new_data: Box<dyn ColumnType>) -> Result<()> {
+    //     if let Some(u_col) = self.data_cols
+    //         .get(field.as_str())
+    //         .and_then(|x| x.as_any().downcast_ref::<UnknownArray>())
+    //     {
+    //         u_col.into_list_col(list)
+    //         self.replace_col(field, new_data);
+    //     } else {
+    //         return Err(NormError::Build);
+    //     }
+    //     Ok(())
+    // }
+
+    pub fn get_mut_or_insert(
+        &mut self,
+        field: &String,
+        default: Box<dyn ColumnType>,
+    ) -> &mut Box<dyn ColumnType> {
         self.data_cols.entry(field.to_string()).or_insert(default)
     }
 
-    pub fn col_push_item<T: ItemTrait>(&mut self, field: &String, item: Item<T>) -> Result<()> {
-        if let Some(arr) = self.data_cols.get(field) {
-            let mut norm_arr = arr.as_any_mut().downcast_mut::<NormArray<T>>().ok_or(NormError::Insert)?;
-            norm_arr.push_item(item);
+    pub fn append_list<T: ItemTrait>(&mut self, field: &String, list: NormArray<T>) {
+        if let Some(col) = self.get_mut_col(field) {
+            if let Some(ucol) = col.as_any().downcast_ref::<NestedArray<UnknownArray>>() {
+                let mut new_col: NestedArray<NormArray<T>> = NestedArray::new();
+                for _ in 0..ucol.len() {
+                    new_col.push_empty();
+                }
+                new_col.push_arr(list);
+                self.replace_col(field, Box::new(new_col));
+            } else if let Some(n_col) = col.as_any_mut().downcast_mut::<NestedArray<NormArray<T>>>()
+            {
+                n_col.push_arr(list);
+            }
         } else {
-            let mut norm_arr: NormArray<T> = NormArray::from_item(item);
-            self.data_cols.insert(field.to_string(), Box::new(norm_arr));
+            self.insert_col(field.to_string(), Box::new(NestedArray::from(list)));
         }
-        Ok(())
     }
 
-    pub fn col_push_list<T: ArrayTrait>(&mut self, field: &String, list: T) -> Result<()> {
-        if let Some(arr) = self.data_cols.get(field) {
-            let mut list_arr = arr.as_any_mut().downcast_mut::<ListArray<T>>().ok_or(NormError::Insert)?;
-            list_arr.push_arr(list);
+    pub fn append_item<T: ItemTrait>(&mut self, field: &String, item: Item<T>) {
+        if let Some(col) = self.get_mut_col(field) {
+            if let Some(ucol) = col.as_any().downcast_ref::<UnknownArray>() {
+                let new_col: NormArray<T> = ucol.clone().into_norm();
+                self.replace_col(field, Box::new(new_col));
+            } else if let Some(n_col) = col.as_any_mut().downcast_mut::<NormArray<T>>() {
+                n_col.push_item(item);
+            }
         } else {
-            let mut list_arr: ListArray<T> = ListArray::from_arr(list);
-            self.data_cols.insert(field.to_string(), Box::new(list_arr));
+            self.insert_col(field.to_string(), Box::new(NormArray::from(item)));
         }
-        Ok(())
     }
 
+    pub fn append_null(&mut self, field: &String) {
+        if let Some(col) = self.get_mut_col(field) {
+            if let Some(ucol) = col.as_unknown() {
+                col.as_any_mut()
+                    .downcast_mut::<UnknownArray>()
+                    .unwrap()
+                    .push_null();
+            } else if col.is_nested() {
+                // col.as_any_mut().downcast_mut::<impl SimpleArrayType>();
+                todo!("append empty list to NestedArray")
+            }
+        }
+    }
 
     pub fn col_push_null(&mut self, field: &String) -> Result<()> {
-        if let Some(arr) = self.data_cols.get(field) { // if column exists...
+        if let Some(arr) = self.data_cols.get(field) {
+            // if column exists...
 
-            if arr.count_data() > 0 { // if column has non-null entries...
-                
+            if arr.count_data() > 0 {
+                // if column has non-null entries...
 
-                if let Some(b_nested) = arr.as_any_mut().downcast_mut::<ListArray<NormArray<bool>>>() {
+                if let Some(b_nested) = arr
+                    .as_any_mut()
+                    .downcast_mut::<NestedArray<NormArray<bool>>>()
+                {
                     b_nested.push_arr(NormArray::new());
-                } else if let Some(s_nested) = arr.as_any_mut().downcast_mut::<ListArray<NormArray<String>>>() {
+                } else if let Some(s_nested) = arr
+                    .as_any_mut()
+                    .downcast_mut::<NestedArray<NormArray<String>>>()
+                {
                     s_nested.push_arr(NormArray::new());
                 }
 
@@ -87,29 +132,44 @@ impl Table {
                 } else if let Some(f_arr) = arr.as_any_mut().downcast_mut::<NormArray<f64>>() {
                     f_arr.push_null();
                 } else {
-                    return Err(NormError::Insert)
+                    return Err(NormError::Insert);
                 }
             }
             // columns exists but is populated with only null values
-            arr.as_any_mut().downcast_mut::<UnknownArray>().ok_or(NormError::Insert)?.add_null();
+            arr.as_any_mut()
+                .downcast_mut::<UnknownArray>()
+                .ok_or(NormError::Insert)?
+                .add_null();
         } else {
             // column doesn't exist yet, create temporary unknown column
-            self.data_cols.insert(field.to_string(), Box::new(UnknownArray::new_with_null()));
+            self.data_cols
+                .insert(field.to_string(), Box::new(UnknownArray::new_with_null()));
         }
         Ok(())
-       
     }
 
-    pub fn get_as_array<T: ItemTrait>(self, field: &String) -> Option<&NormArray<T>> {
-        if let Some(arr) = self.data_cols.get(field) {
-            arr.as_any().downcast_ref::<NormArray<T>>()
-        } else { Option::None }
-    }
+    // pub fn get_as_array<T: ItemTrait>(self, field: &String) -> Option<&NormArray<T>> {
+    //     if let Some(arr) = self.data_cols.get(field) {
+    //         arr.as_any().downcast_ref::<NormArray<T>>()
+    //     } else {
+    //         Option::None
+    //     }
+    // }
+    // pub fn get_as_mut_array<T: ItemTrait>(self, field: &String) -> Option<&mut NormArray<T>> {
+    //     if let Some(arr) = self.data_cols.get(field) {
+    //         arr.as_any_mut().downcast_mut::<NormArray<T>>()
+    //     } else {
+    //         Option::None
+    //     }
+    // }
 
     pub fn insert_fk(&mut self, parent_name: String, parent_id: u64) -> String {
         // insert a new foreign key column into the table and return the column's name
         let fk_field: String = format!("{}_id", parent_name);
-        self.fk_cols.entry(fk_field).or_insert_with(IdColumn::new).man_insert(parent_id);
+        self.fk_cols
+            .entry(fk_field)
+            .or_insert_with(IdColumn::new)
+            .man_insert(parent_id);
         fk_field
     }
 
@@ -117,8 +177,7 @@ impl Table {
         self.id_col.auto_insert()
     }
 
-    pub fn get_mut_col(&mut self, field: &String) -> Option<&Box<dyn ArrayTrait>> {
+    pub fn get_mut_col(&mut self, field: &String) -> Option<&Box<dyn ColumnType>> {
         self.data_cols.get(field)
-    }
     }
 }
