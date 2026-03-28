@@ -25,3 +25,7 @@ target
 
 /target
 /.vscode
+
+# Explicit
+
+dev.txt

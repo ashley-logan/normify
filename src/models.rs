@@ -1,6 +1,7 @@
 mod columns;
 mod database;
 mod item;
+mod macros;
 mod nested_array;
 mod norm_array;
 mod table;

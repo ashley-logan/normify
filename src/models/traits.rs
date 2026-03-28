@@ -8,7 +8,7 @@
 //     };
 // }
 macro_rules! concrete_cast {
-    ($ref_method:ident, $move_method:ident, $ty:ty, $body:stmt) => {
+    ($ref_method:ident, $move_method:ident, $is_method:ident, $ty:ty, $body:stmt, $body2:stmt) => {
         fn $ref_method(&mut self) -> Option<&mut $ty> {
             $body
         }
@@ -16,10 +16,16 @@ macro_rules! concrete_cast {
         fn $move_method(self: Box<Self>) -> Option<Box<$ty>> {
             $body
         }
+
+        fn $is_method(&self) -> bool {
+            $body2
+        }
     };
 }
 
+
 use serde_json::Value;
+use crate::models::Item;
 pub trait ItemTrait: PartialEq + Into<Value> {
     fn as_serde_value(self) -> Value;
     fn as_item<T>(self) -> Item<T>;
@@ -53,44 +59,52 @@ pub trait ColumnType {
         None
     }
 
-    fn as_unknown_nested(&mut self) -> Option<&mut NestedArray<UnknownArray>> {
-        None
-    }
-
-    concrete_cast!(as_bool_column, into_bool_column, BoolColumn, None);
+    fn push_null(&mut self);
+    
+    concrete_cast!(as_bool_column, into_bool_column, is_bool_column, BoolColumn, None, false);
     concrete_cast!(
         as_bool_list_column,
+        is_bool_list_column,
         into_bool_list_column,
         BoolListColumn,
-        None
+        None, 
+        false
     );
-    concrete_cast!(as_string_column, into_string_column, StringColumn, None);
+    concrete_cast!(as_string_column, into_string_column, is_string_column,StringColumn, None, false);
     concrete_cast!(
         as_string_list_column,
         into_string_list_column,
+        is_string_list_column,
         StringListColumn,
-        None
+        None,
+        false
     );
-    concrete_cast!(as_int_column, into_int_column, IntColumn, None);
+    concrete_cast!(as_int_column, into_int_column, is_int_column, IntColumn, None, false);
     concrete_cast!(
         as_int_list_column,
         into_int_list_column,
+        is_int_list_column,
         IntListColumn,
-        None
+        None, 
+        false
     );
-    concrete_cast!(as_uint_column, into_uint_column, UintColumn, None);
+    concrete_cast!(as_uint_column, into_uint_column, is_uint_column, UintColumn, None, false);
     concrete_cast!(
         as_uint_list_column,
         into_uint_list_column,
+        is_uint_list_column,
         UintListColumn,
-        None
+        None,
+        false
     );
-    concrete_cast!(as_float_column, into_float_column, FloatColumn, None);
+    concrete_cast!(as_float_column, into_float_column,is_float_column, FloatColumn, None, false);
     concrete_cast!(
         as_float_list_column,
         into_float_list_column,
+        is_float_list_column,
         FloatListColumn,
-        None
+        None,
+        false
     );
 }
 

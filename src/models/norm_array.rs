@@ -1,19 +1,7 @@
-use crate::models::{ColumnType, ItemTrait, , SimpleArrayType};
+use crate::models::{ColumnType, ItemTrait, , SimpleArrayType, UnknownArray};
 use crate::models::{Item, type_aliases::*};
-use crate::{NormError};
+use crate::{NormError, impl_concrete_cast};
 
-
-macro_rules! impl_try_cast {
-    ($ref_method:ident, $move_method:ident, $ty:ty) => {
-        fn $ref_method(&mut self) -> Option<&mut $ty> {
-            self.as_any_mut().downcast_mut::<$ty>()
-        }
-
-        fn $move_method(self: Box<Self>) -> Option<Box<$ty>> {
-            self.into_any().downcast::<$ty>().ok()
-        }
-    };
-}
 
 #[derive(Clone)]
 pub struct NormArray<T: ItemTrait> {
@@ -52,16 +40,20 @@ impl<T: ItemTrait + 'static> ColumnType for NormArray<T> {
             .count()
     }
 
+    fn push_null(&mut self) {
+        self.items.push(Item::Null);
+    }
 
-    impl_try_cast!(as_bool_column, into_bool_column, BoolColumn);
-    impl_try_cast!(as_string_column, into_string_column, StringColumn);
-    impl_try_cast!(as_int_column, into_int_column, IntColumn);
-    impl_try_cast!(as_uint_column, into_uint_column, UintColumn);
-    impl_try_cast!(as_float_column, into_float_column, FloatColumn);
+
+    impl_concrete_cast!(as_bool_column, into_bool_column, is_bool_column, BoolColumn);
+    impl_concrete_cast!(as_string_column, into_string_column, is_string_column, StringColumn);
+    impl_concrete_cast!(as_int_column, into_int_column, is_int_column, IntColumn);
+    impl_concrete_cast!(as_uint_column, into_uint_column, is_uint_column,UintColumn);
+    impl_concrete_cast!(as_float_column, into_float_column, is_float_column, FloatColumn);
 
 }
 
-impl<T: ItemTrait> SimpleArrayType for NormArray<T> {
+impl<T: ItemTrait + 'static> SimpleArrayType for NormArray<T> {
     fn new() -> Self {
         Self { items: Vec::new() }
     }
@@ -76,6 +68,16 @@ impl<T: ItemTrait> SimpleArrayType for NormArray<T> {
 impl<T: ItemTrait> From<Item<T>> for NormArray<T> {
     fn from(value: Item<T>) -> Self {
         Self { items: vec![value] }
+    }
+}
+
+impl<T: ItemTrait> From<UnknownArray> for NormArray<T> {
+    fn from(value: UnknownArray) -> Self {
+        let mut arr: NormArray<T> = NormArray::new();
+        for _ in 0..value.count_nulls() {
+            arr.push_null();
+        }
+        arr
     }
 }
 

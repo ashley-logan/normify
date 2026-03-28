@@ -1,4 +1,4 @@
-use crate::models::{ColumnType, ItemTrait, SimpleArrayType, UnknownArray, type_aliases::*};
+use crate::{impl_concrete_cast, models::{ColumnType, ItemTrait, SimpleArrayType, UnknownArray, type_aliases::*}};
 use std::any::Any;
 
 #[derive(Clone)]
@@ -39,34 +39,19 @@ impl<T: SimpleArrayType + 'static> ColumnType for NestedArray<T> {
     fn is_nested(&self) -> bool {
         true
     }
-    fn is_unknown(&self) -> bool {
-        self.as_any().is::<NestedArray<UnknownArray>>()
+    
+
+    fn push_null(&mut self) {
+        self.sub_arrays.push(T::new());
     }
 
-    fn as_unknown_nested(&mut self) -> Option<&mut NestedArray<UnknownArray>> {
-        self.as_any_mut()
-            .downcast_mut::<NestedArray<UnknownArray>>()
-    }
+    impl_concrete_cast!(as_bool_list_column, into_bool_list_column, is_bool_list_column, BoolListColumn);
+    impl_concrete_cast!(as_string_list_column, into_string_list_column, is_string_list_column, StringListColumn);
+    impl_concrete_cast!(as_int_list_column, into_int_list_column, is_int_list_column, IntListColumn);
+    impl_concrete_cast!(as_uint_list_column, into_uint_list_column, is_uint_list_column, UintListColumn);
+    impl_concrete_cast!(as_float_list_column, into_float_list_column, is_float_list_column, FloatListColumn);
 
-    fn as_bool_list_column(&mut self) -> Option<&mut BoolListColumn> {
-        self.as_any_mut().downcast_mut()
-    }
-
-    fn as_string_list_column(&mut self) -> Option<&mut StringListColumn> {
-        self.as_any_mut().downcast_mut()
-    }
-
-    fn as_int_list_column(&mut self) -> Option<&mut IntListColumn> {
-        self.as_any_mut().downcast_mut()
-    }
-
-    fn as_uint_list_column(&mut self) -> Option<&mut UintListColumn> {
-        self.as_any_mut().downcast_mut()
-    }
-
-    fn as_float_list_column(&mut self) -> Option<&mut FloatListColumn> {
-        self.as_any_mut().downcast_mut()
-    }
+    
 }
 
 impl<T: SimpleArrayType> From<T> for NestedArray<T> {
@@ -74,6 +59,16 @@ impl<T: SimpleArrayType> From<T> for NestedArray<T> {
         Self {
             sub_arrays: vec![value],
         }
+    }
+}
+
+impl<T: SimpleArrayType> From<UnknownArray> for NestedArray<T> {
+    fn from(value: UnknownArray) -> Self {
+        let mut arr: NestedArray<T> = NestedArray::new();
+        for _ in 0..value.count_nulls() {
+            arr.push_empty();
+        }
+        arr
     }
 }
 
