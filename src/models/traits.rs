@@ -1,12 +1,3 @@
-// macro_rules! impl_normtype {
-//     ($ty:ty) => {
-//         impl NormType for $ty {
-//             fn get_size(self) -> usize {
-//                 size_of::<$ty>()
-//             }
-//         }
-//     };
-// }
 macro_rules! concrete_cast {
     ($ref_method:ident, $move_method:ident, $is_method:ident, $ty:ty, $body:stmt, $body2:stmt) => {
         fn $ref_method(&mut self) -> Option<&mut $ty> {
@@ -23,23 +14,14 @@ macro_rules! concrete_cast {
     };
 }
 
-
 use serde_json::Value;
-use crate::models::Item;
 pub trait ItemTrait: PartialEq + Into<Value> {
     fn as_serde_value(self) -> Value;
-    fn as_item<T>(self) -> Item<T>;
 }
 
-// impl_normtype!(f64);
-// impl_normtype!(i64);
-// impl_normtype!(u64);
-// impl_normtype!(bool);
-// impl_normtype!(String);
+use std::any::Any;
 
-use std::any::{Any}
-
-use crate::models::{NestedArray, NormArray, UnknownArray, type_aliases::*};
+use crate::models::{UnknownArray, type_aliases::*};
 pub trait ColumnType {
     // object safe, dyn compatible
     fn as_any(&self) -> &dyn Any;
@@ -60,17 +42,31 @@ pub trait ColumnType {
     }
 
     fn push_null(&mut self);
-    
-    concrete_cast!(as_bool_column, into_bool_column, is_bool_column, BoolColumn, None, false);
+
     concrete_cast!(
-        as_bool_list_column,
-        is_bool_list_column,
-        into_bool_list_column,
-        BoolListColumn,
-        None, 
+        as_bool_column,
+        into_bool_column,
+        is_bool_column,
+        BoolColumn,
+        None,
         false
     );
-    concrete_cast!(as_string_column, into_string_column, is_string_column,StringColumn, None, false);
+    concrete_cast!(
+        as_bool_list_column,
+        into_bool_list_column,
+        is_bool_list_column,
+        BoolListColumn,
+        None,
+        false
+    );
+    concrete_cast!(
+        as_string_column,
+        into_string_column,
+        is_string_column,
+        StringColumn,
+        None,
+        false
+    );
     concrete_cast!(
         as_string_list_column,
         into_string_list_column,
@@ -79,16 +75,30 @@ pub trait ColumnType {
         None,
         false
     );
-    concrete_cast!(as_int_column, into_int_column, is_int_column, IntColumn, None, false);
+    concrete_cast!(
+        as_int_column,
+        into_int_column,
+        is_int_column,
+        IntColumn,
+        None,
+        false
+    );
     concrete_cast!(
         as_int_list_column,
         into_int_list_column,
         is_int_list_column,
         IntListColumn,
-        None, 
+        None,
         false
     );
-    concrete_cast!(as_uint_column, into_uint_column, is_uint_column, UintColumn, None, false);
+    concrete_cast!(
+        as_uint_column,
+        into_uint_column,
+        is_uint_column,
+        UintColumn,
+        None,
+        false
+    );
     concrete_cast!(
         as_uint_list_column,
         into_uint_list_column,
@@ -97,7 +107,14 @@ pub trait ColumnType {
         None,
         false
     );
-    concrete_cast!(as_float_column, into_float_column,is_float_column, FloatColumn, None, false);
+    concrete_cast!(
+        as_float_column,
+        into_float_column,
+        is_float_column,
+        FloatColumn,
+        None,
+        false
+    );
     concrete_cast!(
         as_float_list_column,
         into_float_list_column,

@@ -1,4 +1,7 @@
-use crate::{impl_concrete_cast, models::{ColumnType, ItemTrait, SimpleArrayType, UnknownArray, type_aliases::*}};
+use crate::{
+    impl_concrete_cast,
+    models::{ColumnType, SimpleArrayType, UnknownArray, type_aliases::*},
+};
 use std::any::Any;
 
 #[derive(Clone)]
@@ -39,19 +42,41 @@ impl<T: SimpleArrayType + 'static> ColumnType for NestedArray<T> {
     fn is_nested(&self) -> bool {
         true
     }
-    
 
     fn push_null(&mut self) {
         self.sub_arrays.push(T::new());
     }
 
-    impl_concrete_cast!(as_bool_list_column, into_bool_list_column, is_bool_list_column, BoolListColumn);
-    impl_concrete_cast!(as_string_list_column, into_string_list_column, is_string_list_column, StringListColumn);
-    impl_concrete_cast!(as_int_list_column, into_int_list_column, is_int_list_column, IntListColumn);
-    impl_concrete_cast!(as_uint_list_column, into_uint_list_column, is_uint_list_column, UintListColumn);
-    impl_concrete_cast!(as_float_list_column, into_float_list_column, is_float_list_column, FloatListColumn);
-
-    
+    impl_concrete_cast!(
+        as_bool_list_column,
+        into_bool_list_column,
+        is_bool_list_column,
+        BoolListColumn
+    );
+    impl_concrete_cast!(
+        as_string_list_column,
+        into_string_list_column,
+        is_string_list_column,
+        StringListColumn
+    );
+    impl_concrete_cast!(
+        as_int_list_column,
+        into_int_list_column,
+        is_int_list_column,
+        IntListColumn
+    );
+    impl_concrete_cast!(
+        as_uint_list_column,
+        into_uint_list_column,
+        is_uint_list_column,
+        UintListColumn
+    );
+    impl_concrete_cast!(
+        as_float_list_column,
+        into_float_list_column,
+        is_float_list_column,
+        FloatListColumn
+    );
 }
 
 impl<T: SimpleArrayType> From<T> for NestedArray<T> {
@@ -92,4 +117,4 @@ impl<T: SimpleArrayType> NestedArray<T> {
     pub fn push_empty(&mut self) {
         self.sub_arrays.push(T::new());
     }
-\}
+}

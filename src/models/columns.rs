@@ -1,4 +1,5 @@
 use crate::models::traits::ColumnType;
+use std::fmt::{self, write};
 
 // #[derive(From)]
 // pub enum DataColumn {
@@ -53,8 +54,33 @@ use crate::models::traits::ColumnType;
 // }
 
 use indexmap::IndexSet;
+#[derive(Clone)]
 pub struct IdColumn(IndexSet<u64>);
 
+"""
+ __________ __________
+|          |          |
+|  ID_u64  |          |
+|__________|__________|
+|    0     |          |
+|__________|__________|
+|    1     |          |
+|__________|__________|
+|    2     |          |
+|__________|__________|
+|   ...    |
+|__________|
+|   304    |
+|__________|
+|   305    |
+|__________|
+"""
+impl fmt::Display for IdColumn {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "__________");
+        writeln!(f, "|")
+    }
+}
 impl IdColumn {
     pub(crate) fn new() -> Self {
         Self(IndexSet::new())
@@ -70,8 +96,15 @@ impl IdColumn {
     }
 
     pub(crate) fn auto_insert(&mut self) -> u64 {
+        // insert a new id based on id column length
         let next_id: u64 = (self.0.len() + 1) as u64;
         self.0.insert(next_id);
         next_id
+    }
+
+    pub(crate) fn auto_insert2(&mut self) {
+        // insert a new id based on id column max (insert 1 if empty)
+        let m: &u64 = self.0.iter().max().unwrap_or(&0_u64);
+        self.0.insert(m.clone() + 1);
     }
 }

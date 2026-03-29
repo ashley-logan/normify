@@ -1241,7 +1241,6 @@ dependencies = [
  "polars",
  "serde_json",
  "thiserror",
- "uuid",
 ]
 
 [[package]]

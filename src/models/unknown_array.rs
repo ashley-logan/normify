@@ -52,4 +52,12 @@ impl UnknownArray {
         }
         arr
     }
+
+    pub fn into_nested<T: SimpleArrayType>(self) -> NestedArray<T> {
+        let mut arr: NestedArray<T> = NestedArray::new();
+        for _ in 0..self.0 {
+            arr.push_empty();
+        }
+        arr
+    }
 }

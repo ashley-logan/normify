@@ -46,7 +46,7 @@ pub fn normalize_arr(arr: &[Value]) -> Result<Box<dyn ColumnType>> {
                         Item::Null
                     }
                 })
-                .collect(), // can be downcasted to NormArray<String>
+                .collect::<NormArray<String>>(), // can be downcasted to NormArray<String>
         ))
     } else if flat_arr
         .iter()
@@ -63,7 +63,7 @@ pub fn normalize_arr(arr: &[Value]) -> Result<Box<dyn ColumnType>> {
                         Item::Null
                     }
                 })
-                .collect(), // can be downcasted to NormArray<bool>
+                .collect::<NormArray<bool>>(), // can be downcasted to NormArray<bool>
         ))
     } else if flat_arr.iter().all(|x| x.as_i64().is_some() || x.is_null()) {
         // every Value can be cast to Item<i64>
@@ -77,7 +77,7 @@ pub fn normalize_arr(arr: &[Value]) -> Result<Box<dyn ColumnType>> {
                         Item::Null
                     }
                 })
-                .collect(), // can be downcasted to NormArray<i64>
+                .collect::<NormArray<i64>>(), // can be downcasted to NormArray<i64>
         ))
     } else if flat_arr.iter().all(|x| x.as_u64().is_some() || x.is_null()) {
         // every Value can be cast to Item<u64>
@@ -91,7 +91,7 @@ pub fn normalize_arr(arr: &[Value]) -> Result<Box<dyn ColumnType>> {
                         Item::Null
                     }
                 })
-                .collect(), // can be downcasted to NormArray<u64>
+                .collect::<NormArray<u64>>(), // can be downcasted to NormArray<u64>
         ))
     } else if flat_arr.iter().all(|x| x.as_f64().is_some() || x.is_null()) {
         // every Value can be cast to Item<f64>
@@ -105,7 +105,7 @@ pub fn normalize_arr(arr: &[Value]) -> Result<Box<dyn ColumnType>> {
                         Item::Null
                     }
                 })
-                .collect(), // can be downcasted to NormArray<f64>
+                .collect::<NormArray<f64>>(), // can be downcasted to NormArray<f64>
         ))
     } else {
         // heterogenous array, represent all values as strings
@@ -119,7 +119,7 @@ pub fn normalize_arr(arr: &[Value]) -> Result<Box<dyn ColumnType>> {
                         Item::Data(x.to_string())
                     }
                 })
-                .collect(), // can be downcasted to NormArray<String>
+                .collect::<NormArray<String>>(), // can be downcasted to NormArray<String>
         ))
     }
 }

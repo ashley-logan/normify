@@ -3,7 +3,7 @@ use derive_more::{Display, From};
 use serde_json::Value;
 
 #[derive(PartialEq, From, Clone, Debug, Display)]
-pub enum Item<T: ItemTrait> {
+pub enum Item<T: ItemTrait + Sized> {
     Data(T),
     #[display("null")]
     #[from(ignore)]
@@ -14,11 +14,7 @@ macro_rules! impl_itemtrait {
     ($ty:ty) => {
         impl ItemTrait for $ty {
             fn as_serde_value(self) -> Value {
-                self.into::<Value>()
-            }
-
-            fn as_item(self) -> Item<$ty> {
-                Item::Data(self)
+                self.into()
             }
         }
     };

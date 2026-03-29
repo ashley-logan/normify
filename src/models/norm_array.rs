@@ -1,7 +1,6 @@
-use crate::models::{ColumnType, ItemTrait, , SimpleArrayType, UnknownArray};
+use crate::impl_concrete_cast;
+use crate::models::{ColumnType, ItemTrait, SimpleArrayType, UnknownArray};
 use crate::models::{Item, type_aliases::*};
-use crate::{NormError, impl_concrete_cast};
-
 
 #[derive(Clone)]
 pub struct NormArray<T: ItemTrait> {
@@ -44,13 +43,21 @@ impl<T: ItemTrait + 'static> ColumnType for NormArray<T> {
         self.items.push(Item::Null);
     }
 
-
     impl_concrete_cast!(as_bool_column, into_bool_column, is_bool_column, BoolColumn);
-    impl_concrete_cast!(as_string_column, into_string_column, is_string_column, StringColumn);
+    impl_concrete_cast!(
+        as_string_column,
+        into_string_column,
+        is_string_column,
+        StringColumn
+    );
     impl_concrete_cast!(as_int_column, into_int_column, is_int_column, IntColumn);
-    impl_concrete_cast!(as_uint_column, into_uint_column, is_uint_column,UintColumn);
-    impl_concrete_cast!(as_float_column, into_float_column, is_float_column, FloatColumn);
-
+    impl_concrete_cast!(as_uint_column, into_uint_column, is_uint_column, UintColumn);
+    impl_concrete_cast!(
+        as_float_column,
+        into_float_column,
+        is_float_column,
+        FloatColumn
+    );
 }
 
 impl<T: ItemTrait + 'static> SimpleArrayType for NormArray<T> {
@@ -149,7 +156,7 @@ impl<T: ItemTrait> FromIterator<Item<T>> for NormArray<T> {
     fn from_iter<I: IntoIterator<Item = Item<T>>>(iter: I) -> Self {
         let mut arr = NormArray::new();
         for item in iter {
-            arr.push(item);
+            arr.push_item(item);
         }
         arr
     }
@@ -171,15 +178,5 @@ impl<T: ItemTrait> IntoIterator for NormArray<T> {
 
     fn into_iter(self) -> Self::IntoIter {
         self.items.into_iter()
-    }
-}
-
-impl<T: ItemTrait> From<Vec<NullMarker>> for NormArray<T> {
-    fn from(v: Vec<NullMarker>) -> Self {
-        let mut arr = Self::new();
-        for _ in v {
-            arr.push(Item::Null);
-        }
-        arr
     }
 }
