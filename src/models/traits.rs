@@ -15,18 +15,36 @@ macro_rules! concrete_cast {
 }
 
 use serde_json::Value;
-pub trait ItemTrait: PartialEq + Into<Value> {
+pub trait ItemTrait: PartialEq + Into<Value> + Sized + std::fmt::Display {
     fn as_serde_value(self) -> Value;
 }
 
-use std::any::Any;
+use std::{any::Any, fmt::Write};
 
-use crate::models::{UnknownArray, type_aliases::*};
+use crate::{
+    NormArray,
+    models::{UnknownArray, type_aliases::*},
+};
 pub trait ColumnType {
     // object safe, dyn compatible
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;
     fn into_any(self: Box<Self>) -> Box<dyn Any>;
+
+    fn write_list_fmt(&self, limit: Option<usize>, buf: &mut dyn Write);
+    fn write_col_fmt(&self, limit: Option<usize>, buf: &mut dyn Write);
+
+    fn print_list_fmt(&self, limit: Option<usize>) {
+        let mut buf = String::new();
+        self.write_list_fmt(limit, &mut buf);
+        print!("{}", buf);
+    }
+    fn print_col_fmt(&self, limit: Option<usize>) {
+        let mut buf = String::new();
+        self.write_col_fmt(limit, &mut buf);
+        print!("{}", buf);
+    }
+
     fn len(&self) -> usize;
     fn count_data(&self) -> usize;
     fn count_nulls(&self) -> usize;
@@ -42,6 +60,8 @@ pub trait ColumnType {
     }
 
     fn push_null(&mut self);
+
+    fn into_string_super(self: Box<Self>) -> Box<NormArray<String>>;
 
     concrete_cast!(
         as_bool_column,
@@ -123,19 +143,4 @@ pub trait ColumnType {
         None,
         false
     );
-}
-
-pub trait SimpleArrayType: ColumnType {
-    // unsafe, not dyn compatible
-    fn new() -> Self;
-    fn is_known(&self) -> bool;
-    fn is_unknown(&self) -> bool {
-        !self.is_known()
-    }
-    fn push_null(&mut self);
-}
-
-pub trait NestedArrayType: ColumnType {
-    fn new() -> Self;
-    fn push_empty(&mut self);
 }

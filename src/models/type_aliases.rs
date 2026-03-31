@@ -8,8 +8,8 @@ pub type UintColumn = NormArray<u64>;
 pub type FloatColumn = NormArray<f64>;
 
 // aliases for nested arrays
-pub type BoolListColumn = NestedArray<BoolColumn>;
-pub type StringListColumn = NestedArray<StringColumn>;
-pub type IntListColumn = NestedArray<IntColumn>;
-pub type UintListColumn = NestedArray<UintColumn>;
-pub type FloatListColumn = NestedArray<FloatColumn>;
+pub type BoolListColumn = NestedArray<bool>;
+pub type StringListColumn = NestedArray<String>;
+pub type IntListColumn = NestedArray<i64>;
+pub type UintListColumn = NestedArray<u64>;
+pub type FloatListColumn = NestedArray<f64>;

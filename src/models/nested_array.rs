@@ -1,15 +1,15 @@
 use crate::{
-    impl_concrete_cast,
-    models::{ColumnType, SimpleArrayType, UnknownArray, type_aliases::*},
+    NormArray, impl_concrete_cast,
+    models::{ColumnType, ItemTrait, UnknownArray, type_aliases::*},
 };
-use std::any::Any;
+use std::{any::Any, fmt::Write};
 
 #[derive(Clone)]
-pub struct NestedArray<T: SimpleArrayType> {
-    sub_arrays: Vec<T>,
+pub struct NestedArray<T: ItemTrait> {
+    sub_arrays: Vec<NormArray<T>>,
 }
 
-impl<T: SimpleArrayType + 'static> ColumnType for NestedArray<T> {
+impl<T: ItemTrait + 'static> ColumnType for NestedArray<T> {
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -20,6 +20,44 @@ impl<T: SimpleArrayType + 'static> ColumnType for NestedArray<T> {
 
     fn into_any(self: Box<Self>) -> Box<dyn Any> {
         self
+    }
+
+    fn into_string_super(self: Box<Self>) -> Box<NormArray<String>> {
+        let mut arr: NormArray<String> = NormArray::new();
+        let mut buf = String::new();
+        for sub in self.into_iter() {
+            buf.clear();
+            sub.write_list_fmt(None, &mut buf);
+            arr.push_prim(buf.clone());
+        }
+        Box::new(arr)
+    }
+
+    fn write_col_fmt(&self, limit: Option<usize>, buf: &mut dyn Write) {
+        let mut lim: usize = limit.unwrap_or(self.len());
+        if lim > self.len() {
+            lim = self.len();
+        }
+        writeln!(buf, "").unwrap();
+        for i in 0..lim {
+            self.sub_arrays[i].write_list_fmt(None, buf);
+            writeln!(buf, "").unwrap();
+        }
+        writeln!(buf, "").unwrap();
+    }
+
+    fn write_list_fmt(&self, limit: Option<usize>, buf: &mut dyn Write) {
+        let mut lim: usize = limit.unwrap_or(self.len());
+        if lim > self.len() {
+            lim = self.len();
+        }
+        writeln!(buf, "[").unwrap();
+        for i in 0..lim {
+            write!(buf, "\t").unwrap();
+            self.sub_arrays[i].write_list_fmt(None, buf);
+            writeln!(buf, "").unwrap();
+        }
+        writeln!(buf, "]").unwrap();
     }
 
     fn len(&self) -> usize {
@@ -44,7 +82,7 @@ impl<T: SimpleArrayType + 'static> ColumnType for NestedArray<T> {
     }
 
     fn push_null(&mut self) {
-        self.sub_arrays.push(T::new());
+        self.sub_arrays.push(NormArray::<T>::new());
     }
 
     impl_concrete_cast!(
@@ -79,15 +117,15 @@ impl<T: SimpleArrayType + 'static> ColumnType for NestedArray<T> {
     );
 }
 
-impl<T: SimpleArrayType> From<T> for NestedArray<T> {
-    fn from(value: T) -> Self {
+impl<T: ItemTrait> From<NormArray<T>> for NestedArray<T> {
+    fn from(value: NormArray<T>) -> Self {
         Self {
             sub_arrays: vec![value],
         }
     }
 }
 
-impl<T: SimpleArrayType> From<UnknownArray> for NestedArray<T> {
+impl<T: ItemTrait> From<UnknownArray> for NestedArray<T> {
     fn from(value: UnknownArray) -> Self {
         let mut arr: NestedArray<T> = NestedArray::new();
         for _ in 0..value.count_nulls() {
@@ -97,24 +135,41 @@ impl<T: SimpleArrayType> From<UnknownArray> for NestedArray<T> {
     }
 }
 
-impl<T: SimpleArrayType> NestedArray<T> {
+impl<T: ItemTrait> NestedArray<T> {
     pub fn new() -> Self {
         Self {
-            sub_arrays: Vec::new(),
+            sub_arrays: Vec::<NormArray<T>>::new(),
         }
     }
 
-    pub fn from_arr(arr: T) -> Self {
+    pub fn new_with_nulls(empty_count: usize) -> Self {
+        let mut arr = Self::new();
+        for _ in 0..empty_count {
+            arr.push_empty();
+        }
+        arr
+    }
+
+    pub fn from_arr(arr: NormArray<T>) -> Self {
         Self {
             sub_arrays: vec![arr],
         }
     }
 
-    pub fn push_arr(&mut self, arr: T) {
+    pub fn push_arr(&mut self, arr: NormArray<T>) {
         self.sub_arrays.push(arr)
     }
 
     pub fn push_empty(&mut self) {
-        self.sub_arrays.push(T::new());
+        self.sub_arrays.push(NormArray::<T>::new());
+    }
+}
+
+impl<T: ItemTrait> IntoIterator for NestedArray<T> {
+    type Item = NormArray<T>;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.sub_arrays.into_iter()
     }
 }

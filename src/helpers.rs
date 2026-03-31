@@ -1,8 +1,6 @@
 use crate::error::Result;
-use crate::models::{ColumnType, Item, NormArray, SimpleArrayType, UnknownArray};
-use indexmap::IndexMap;
+use crate::models::{ColumnType, Item, NormArray, UnknownArray};
 use serde_json::Value;
-use std::any::Any;
 
 // takes a slice of values and returns an owned vectored with all Value::Array items flattened
 pub fn flatten(arr: &[Value]) -> Vec<Value> {
@@ -32,7 +30,7 @@ pub fn normalize_arr(arr: &[Value]) -> Result<Box<dyn ColumnType>> {
         return Ok(Box::new(UnknownArray::new()));
     }
 
-    let mut flat_arr: Vec<Value> = flatten(arr); // get flattened array
+    let flat_arr: Vec<Value> = flatten(arr); // get flattened array
 
     if flat_arr.iter().all(|x| x.as_str().is_some() || x.is_null()) {
         // every Value can be cast to Item<String>

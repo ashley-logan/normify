@@ -16,6 +16,9 @@ pub enum NormError {
     Serde(#[from] serde_json::Error),
     #[error("column type does not match item type")]
     Insert,
+    // wrapper for the io error type
+    #[error("{0}")]
+    IO(#[from] std::io::Error),
 }
 
 pub type Result<T> = std::result::Result<T, NormError>;

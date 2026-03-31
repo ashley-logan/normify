@@ -1,3 +1,5 @@
+use std::ops::Index;
+
 use crate::error::Result;
 use crate::helpers::normalize_arr;
 use crate::models::{ColumnType, Item, Table, UnknownArray};
@@ -15,6 +17,14 @@ impl Database {
         Self {
             tables: IndexMap::new(),
         }
+    }
+
+    pub fn contains_table(&self, name: &str) -> bool {
+        self.tables.contains_key(name)
+    }
+
+    pub fn get_table(&self, name: &str) -> Option<&Table> {
+        self.tables.get(name)
     }
 
     pub fn get_mut_table<'a>(&'a mut self, name: &str) -> Option<&'a mut Table> {
@@ -44,9 +54,20 @@ impl Database {
     }
 
     pub fn remove_null_cols(&mut self) {
-        for (_name, tbl) in self.tables.iter_mut() {
+        let mut empty_tbls: Vec<String> = vec![];
+        for (name, tbl) in self.tables.iter_mut() {
             tbl.remove_unknown_cols();
+            if tbl.num_data_cols() == 0 {
+                empty_tbls.push(name.clone());
+            }
         }
+        for name in empty_tbls {
+            self.tables.swap_remove(name.as_str());
+        }
+    }
+
+    pub fn iter_tables(&self) -> indexmap::map::Iter<'_, String, Table> {
+        self.tables.iter()
     }
 
     pub(crate) fn parse_obj(
@@ -56,32 +77,43 @@ impl Database {
         parent_id: Option<u64>,
         parent_tname: Option<&String>,
     ) -> Result<()> {
-        let curr_table: &mut Table = self.get_mut_table_or_create(table_name); // curr_table = mutable reference to Table: table_name
+        println!("Parsing new Object");
+
+        if !self.contains_table(table_name) {
+            println!("Creating table {}", table_name);
+            self.add_table(table_name.to_string());
+        }
+        let curr_table: &mut Table = self.get_mut_or_panic(table_name); // curr_table = mutable reference to Table: table_name
 
         let curr_id: u64 = curr_table.new_id(); // push auto generated id for new row and store in curr_id
+        println!("New Row in {} table; ID={}", table_name, curr_id);
 
         if let (Some(pid), Some(pname)) = (parent_id, parent_tname) {
             // if curr_table is a child of Table=parent_name, then push parent id for foreign key column
             // foreign key column is created if needed
             curr_table.insert_fk(pname.to_string(), pid);
+            println!("Foreign Key Column for {} appened FK_ID={}", pname, pid);
         }
 
-        drop(curr_table); // drop mutable reference to working Table
+        let _ = curr_table; // drop mutable reference to working Table
 
         for (k, v) in obj {
             match v {
                 // match on Value variant
                 Value::Bool(b) => {
+                    println!("Column {} entry is bool {}", k, b.clone());
                     // Bool variant => push Data(bool)
                     self.get_mut_or_panic(table_name)
-                        .append_item(k, Item::Data(*b));
+                        .append_item(k, Item::Data(*b))?;
                 }
                 Value::String(s) => {
+                    println!("Column {} entry is string {}", k, s.clone());
                     // String variant => push Data(String)
                     self.get_mut_or_panic(table_name)
-                        .append_item(k, Item::Data(s.clone()));
+                        .append_item(k, Item::Data(s.clone()))?;
                 }
                 Value::Null => {
+                    println!("Column {} entry is null", k);
                     // Null variant => push null
                     let col = self
                         .get_mut_or_panic(table_name)
@@ -92,21 +124,26 @@ impl Database {
                     let curr_table = self.get_mut_or_panic(table_name);
                     // Number variant => try converting to (impl ItemTrait) number types
                     if let Some(i) = n.as_i64() {
+                        println!("Column {} entry is int {}", k, i.clone());
                         // try i64
                         curr_table.append_item(k, Item::Data(i))?;
                     } else if let Some(u) = n.as_u64() {
+                        println!("Column {} entry is uint {}", k, u.clone());
                         // try u64
                         curr_table.append_item(k, Item::Data(u))?;
                     } else if let Some(f) = n.as_f64() {
+                        println!("Column {} entry is float {}", k, f.clone());
                         // fallback to f64
                         curr_table.append_item(k, Item::Data(f))?;
                     } else {
+                        println!("Column {} entry is null", k);
                         // number must be > u64::MAX, for now raise error until implemented
 
                         curr_table.append_null(k)?;
                     }
                 }
                 Value::Array(arr) => {
+                    println!("Column {} entry is array", k);
                     // Array variant => check inner Value variants
 
                     if arr.iter().any(Value::is_object) {
@@ -115,16 +152,6 @@ impl Database {
                         let child_name: String = format!("{}_table", k);
 
                         self.parse_object_array(&child_name, arr, Some(curr_id), Some(table_name))?;
-                        // for child_obj in arr {
-                        //     // parse each object in array, with curr_table of the caller as the parent_table of the call
-                        //     parse_obj(
-                        //         self,
-                        //         &child_name,
-                        //         child_obj.as_object().ok_or(NormError::Build)?,
-                        //         Some(curr_id),
-                        //         Some(table_name),
-                        //     );
-                        // }
                     } else {
                         // column is a ListArray
                         let n_arr: Box<dyn ColumnType> = normalize_arr(arr)?; // homogenize array and convert innner types to Item<T>
@@ -155,6 +182,7 @@ impl Database {
                     }
                 }
                 Value::Object(child_obj) => {
+                    println!("Column {} entry is Object", k);
                     // if the value is an object, this is a new table
                     // the current table has a one-to-one relationship with the new table
                     self.get_mut_or_panic(table_name).drop(k); // drops the column if it exists since this is not a column in curr_table
@@ -180,5 +208,13 @@ impl Database {
             }
         }
         Ok(())
+    }
+}
+
+impl Index<&str> for Database {
+    type Output = Table;
+
+    fn index(&self, index: &str) -> &Self::Output {
+        &self.tables[index]
     }
 }

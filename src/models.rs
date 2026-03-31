@@ -14,5 +14,5 @@ pub use item::Item;
 pub use nested_array::NestedArray;
 pub use norm_array::NormArray;
 pub use table::Table;
-pub use traits::{ColumnType, ItemTrait, SimpleArrayType};
+pub use traits::{ColumnType, ItemTrait};
 pub use unknown_array::UnknownArray;

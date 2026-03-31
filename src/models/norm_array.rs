@@ -1,6 +1,7 @@
 use crate::impl_concrete_cast;
-use crate::models::{ColumnType, ItemTrait, SimpleArrayType, UnknownArray};
+use crate::models::{ColumnType, ItemTrait, UnknownArray};
 use crate::models::{Item, type_aliases::*};
+use std::fmt::Write;
 
 #[derive(Clone)]
 pub struct NormArray<T: ItemTrait> {
@@ -19,6 +20,41 @@ impl<T: ItemTrait + 'static> ColumnType for NormArray<T> {
 
     fn into_any(self: Box<Self>) -> Box<dyn Any> {
         self
+    }
+
+    fn into_string_super(self: Box<Self>) -> Box<NormArray<String>> {
+        let mut arr: NormArray<String> = NormArray::new();
+        for item in self.into_iter() {
+            arr.push_item(item.inner_to_string());
+        }
+        Box::new(arr)
+    }
+
+    fn write_col_fmt(&self, limit: Option<usize>, buf: &mut dyn Write) {
+        let mut lim: usize = limit.unwrap_or(self.len());
+        if lim > self.len() {
+            lim = self.len();
+        }
+        writeln!(buf, "").unwrap();
+        for i in 0..lim {
+            writeln!(buf, "{}", self.items[i]).unwrap();
+        }
+        writeln!(buf, "").unwrap();
+    }
+
+    fn write_list_fmt(&self, limit: Option<usize>, buf: &mut dyn Write) {
+        let mut lim: usize = limit.unwrap_or(self.len());
+        if lim > self.len() {
+            lim = self.len();
+        }
+        write!(buf, "[  ").unwrap();
+        for i in 0..lim {
+            if i == lim - 1 {
+                write!(buf, "{}  ]", self.items[i]).unwrap();
+                break;
+            }
+            write!(buf, "{}, ", self.items[i]).unwrap();
+        }
     }
 
     fn len(&self) -> usize {
@@ -60,18 +96,6 @@ impl<T: ItemTrait + 'static> ColumnType for NormArray<T> {
     );
 }
 
-impl<T: ItemTrait + 'static> SimpleArrayType for NormArray<T> {
-    fn new() -> Self {
-        Self { items: Vec::new() }
-    }
-    fn is_known(&self) -> bool {
-        true
-    }
-    fn push_null(&mut self) {
-        self.items.push(Item::Null);
-    }
-}
-
 impl<T: ItemTrait> From<Item<T>> for NormArray<T> {
     fn from(value: Item<T>) -> Self {
         Self { items: vec![value] }
@@ -87,7 +111,6 @@ impl<T: ItemTrait> From<UnknownArray> for NormArray<T> {
         arr
     }
 }
-
 // impl_ColumnType_normarray!(f64);
 // impl_ColumnType_normarray!(i64);
 // impl_ColumnType_normarray!(u64);
@@ -99,6 +122,14 @@ impl<T: ItemTrait> NormArray<T> {
         Self {
             items: Vec::<Item<T>>::new(),
         }
+    }
+
+    pub(crate) fn new_with_nulls(null_count: usize) -> Self {
+        let mut arr = Self::new();
+        for _ in 0..null_count {
+            arr.push_null();
+        }
+        arr
     }
 
     pub(crate) fn from_item(item: Item<T>) -> Self {

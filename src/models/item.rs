@@ -3,11 +3,18 @@ use derive_more::{Display, From};
 use serde_json::Value;
 
 #[derive(PartialEq, From, Clone, Debug, Display)]
-pub enum Item<T: ItemTrait + Sized> {
+pub enum Item<T: ItemTrait> {
     Data(T),
     #[display("null")]
     #[from(ignore)]
     Null,
+}
+
+impl<T: ItemTrait> Item<T> {
+    pub fn inner_to_string(self) -> Item<String> {
+        let s = self.to_string();
+        Item::Data(s)
+    }
 }
 
 macro_rules! impl_itemtrait {

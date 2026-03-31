@@ -1,4 +1,4 @@
-use crate::models::{ColumnType, ItemTrait, NestedArray, NormArray, SimpleArrayType};
+use crate::models::{ColumnType, Item, ItemTrait, NestedArray, NormArray};
 use std::any::Any;
 
 #[derive(Clone, Copy)]
@@ -15,6 +15,23 @@ impl ColumnType for UnknownArray {
 
     fn into_any(self: Box<Self>) -> Box<dyn Any> {
         self
+    }
+
+    fn into_string_super(self: Box<Self>) -> Box<NormArray<String>> {
+        let mut arr: NormArray<String> = NormArray::new();
+        let item: Item<String> = Item::Null;
+        for _ in 0..self.0 {
+            arr.push_item(item.clone().inner_to_string());
+        }
+        Box::new(arr)
+    }
+
+    fn write_list_fmt(&self, limit: Option<usize>, buf: &mut dyn std::fmt::Write) {
+        let _ = writeln!(buf, "UNKNOWN");
+    }
+
+    fn write_col_fmt(&self, limit: Option<usize>, buf: &mut dyn std::fmt::Write) {
+        let _ = writeln!(buf, "UNKNOWN");
     }
 
     fn len(&self) -> usize {
@@ -53,7 +70,7 @@ impl UnknownArray {
         arr
     }
 
-    pub fn into_nested<T: SimpleArrayType>(self) -> NestedArray<T> {
+    pub fn into_nested<T: ItemTrait>(self) -> NestedArray<T> {
         let mut arr: NestedArray<T> = NestedArray::new();
         for _ in 0..self.0 {
             arr.push_empty();
