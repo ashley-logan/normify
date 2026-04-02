@@ -3,7 +3,6 @@ use std::ops::Index;
 use crate::error::{NormError, Result};
 use crate::models::{ColumnType, IdColumn, Item, ItemTrait, NestedArray, NormArray};
 use indexmap::IndexMap;
-use indexmap::set::Slice;
 
 pub struct Table {
     pub id_col: IdColumn,
@@ -73,7 +72,9 @@ impl Table {
                 return Err(NormError::Build);
             }
         } else {
-            self.insert_col(field.to_string(), Box::new(NestedArray::from(list)));
+            let mut new_col: NestedArray<T> = NestedArray::new_with_nulls(self.num_rows() - 1);
+            new_col.push_arr(list);
+            self.insert_col(field.to_string(), Box::new(new_col));
         }
         Ok(())
     }
@@ -100,7 +101,9 @@ impl Table {
                 self.data_cols.shift_insert(ind, name, new_col);
             }
         } else {
-            self.insert_col(field.to_string(), Box::new(NormArray::from(item)));
+            let mut new_col: NormArray<T> = NormArray::new_with_nulls(self.num_rows() - 1);
+            new_col.push_item(item);
+            self.insert_col(field.to_string(), Box::new(new_col));
         }
         Ok(())
     }

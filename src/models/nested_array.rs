@@ -1,5 +1,7 @@
 use crate::{
-    NormArray, impl_concrete_cast,
+    NormArray,
+    error::*,
+    impl_concrete_cast,
     models::{ColumnType, ItemTrait, UnknownArray, type_aliases::*},
 };
 use std::{any::Any, fmt::Write};
@@ -117,13 +119,13 @@ impl<T: ItemTrait + 'static> ColumnType for NestedArray<T> {
     );
 }
 
-impl<T: ItemTrait> From<NormArray<T>> for NestedArray<T> {
-    fn from(value: NormArray<T>) -> Self {
-        Self {
-            sub_arrays: vec![value],
-        }
-    }
-}
+// impl<T: ItemTrait> From<NormArray<T>> for NestedArray<T> {
+//     fn from(value: NormArray<T>) -> Self {
+//         Self {
+//             sub_arrays: vec![value],
+//         }
+//     }
+// }
 
 impl<T: ItemTrait> From<UnknownArray> for NestedArray<T> {
     fn from(value: UnknownArray) -> Self {
@@ -163,6 +165,23 @@ impl<T: ItemTrait> NestedArray<T> {
     pub fn push_empty(&mut self) {
         self.sub_arrays.push(NormArray::<T>::new());
     }
+
+    pub fn try_downsize(arr: NestedArray<T::Fallback>) -> Result<NestedArray<T>> {
+        arr.into_iter().map(NormArray::<T>::try_downsize).collect()
+    }
+}
+
+impl<T: ItemTrait> std::ops::Index<usize> for NestedArray<T> {
+    type Output = NormArray<T>;
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.sub_arrays[index]
+    }
+}
+
+impl<T: ItemTrait> std::ops::IndexMut<usize> for NestedArray<T> {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.sub_arrays[index]
+    }
 }
 
 impl<T: ItemTrait> IntoIterator for NestedArray<T> {
@@ -171,5 +190,15 @@ impl<T: ItemTrait> IntoIterator for NestedArray<T> {
 
     fn into_iter(self) -> Self::IntoIter {
         self.sub_arrays.into_iter()
+    }
+}
+
+impl<T: ItemTrait> FromIterator<NormArray<T>> for NestedArray<T> {
+    fn from_iter<I: IntoIterator<Item = NormArray<T>>>(iter: I) -> Self {
+        let mut arr = Self::new();
+        for sub in iter {
+            arr.push_arr(sub);
+        }
+        arr
     }
 }

@@ -14,18 +14,32 @@ macro_rules! concrete_cast {
     };
 }
 
-use serde_json::Value;
-pub trait ItemTrait: PartialEq + Into<Value> + Sized + std::fmt::Display {
-    fn as_serde_value(self) -> Value;
+use crate::Item;
+use crate::error::*;
+use std::fmt::Display;
+use std::ops::{Index, IndexMut};
+pub trait ItemTrait: PartialEq + Sized + Display + 'static {
+    type Fallback: From<Self> + TryInto<Self> + ItemTrait;
+    fn into_fallback(self) -> Self::Fallback {
+        self.into()
+    }
+    fn item(self) -> Item<Self> {
+        Item::Data(self)
+    }
+    fn try_from_fallback(value: Self::Fallback) -> Result<Self> {
+        match value.try_into() {
+            Ok(i) => Ok(i),
+            Err(_) => Err(NormError::Convert),
+        }
+    }
 }
-
-use std::{any::Any, fmt::Write};
 
 use crate::{
     NormArray,
     models::{UnknownArray, type_aliases::*},
 };
-pub trait ColumnType {
+use std::{any::Any, fmt::Write};
+pub trait ColumnType: Index<usize> {
     // object safe, dyn compatible
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;

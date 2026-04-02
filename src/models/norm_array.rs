@@ -1,3 +1,4 @@
+use crate::error::*;
 use crate::impl_concrete_cast;
 use crate::models::{ColumnType, ItemTrait, UnknownArray};
 use crate::models::{Item, type_aliases::*};
@@ -96,21 +97,19 @@ impl<T: ItemTrait + 'static> ColumnType for NormArray<T> {
     );
 }
 
-impl<T: ItemTrait> From<Item<T>> for NormArray<T> {
-    fn from(value: Item<T>) -> Self {
-        Self { items: vec![value] }
+impl<T: ItemTrait> std::ops::Index<usize> for NormArray<T> {
+    type Output = Item<T>;
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.items[index]
     }
 }
 
-impl<T: ItemTrait> From<UnknownArray> for NormArray<T> {
-    fn from(value: UnknownArray) -> Self {
-        let mut arr: NormArray<T> = NormArray::new();
-        for _ in 0..value.count_nulls() {
-            arr.push_null();
-        }
-        arr
+impl<T: ItemTrait> std::ops::IndexMut<usize> for NormArray<T> {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.items[index]
     }
 }
+
 // impl_ColumnType_normarray!(f64);
 // impl_ColumnType_normarray!(i64);
 // impl_ColumnType_normarray!(u64);
@@ -118,7 +117,7 @@ impl<T: ItemTrait> From<UnknownArray> for NormArray<T> {
 // impl_ColumnType_normarray!(String);
 
 impl<T: ItemTrait> NormArray<T> {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             items: Vec::<Item<T>>::new(),
         }
@@ -142,26 +141,6 @@ impl<T: ItemTrait> NormArray<T> {
         }
     }
 
-    // pub(crate) fn from_vec_values<T>(v: Vec<serde_json::Value>) -> Result<Self<T>>
-    // where
-    //     T: ItemTrait,
-    //     serde_json::Value: TryInto<T>,
-    //     T: TryFrom<serde_json::Value>,
-    // {
-    //     let mut item_v: Vec<Item<T>> = vec![];
-    //     let mut arr: NormArray<T> = NormArray::new();
-    //     for val in v {
-    //         if matches!(val, serde_json::Value::Null) {
-    //             arr.push_null();
-    //         } else if let Ok(prim) = val.try_into::<T>() {
-    //             arr.push_prim(prim);
-    //         } else {
-    //             return Err(NormError::Convert);
-    //         }
-    //     }
-    //     Ok(arr)
-    // }
-
     pub fn push_item(&mut self, item: Item<T>) {
         self.items.push(item)
     }
@@ -183,6 +162,25 @@ impl<T: ItemTrait> NormArray<T> {
     }
 }
 
+impl<T: ItemTrait> NormArray<T> {
+    /// Tries to convert NormArray<T::Fallback> --> NormArray<T>
+    ///
+    /// ```
+    /// use normify::NormArray;
+    /// let u128_arr: NormArray<u128> = NormArray::new();
+    /// let r: normify::error::Result<NormArray<u64>> = NormArray::<u64>::try_downsize(u128_arr);
+    /// assert!(r.is_ok())
+    ///
+    /// ```
+    pub fn try_downsize(arr: NormArray<T::Fallback>) -> Result<NormArray<T>> {
+        arr.into_iter()
+            .map(|x| match x.into_option() {
+                Some(inner) => T::try_from_fallback(inner).map(|i| i.item()),
+                None => Ok(Item::<T>::Null),
+            })
+            .collect()
+    }
+}
 impl<T: ItemTrait> FromIterator<Item<T>> for NormArray<T> {
     fn from_iter<I: IntoIterator<Item = Item<T>>>(iter: I) -> Self {
         let mut arr = NormArray::new();

@@ -19,6 +19,9 @@ pub enum NormError {
     // wrapper for the io error type
     #[error("{0}")]
     IO(#[from] std::io::Error),
+    // wrapper for the std::convert error type
+    #[error("{0}")]
+    TryConvert(#[from] std::convert::Infallible),
 }
 
 pub type Result<T> = std::result::Result<T, NormError>;

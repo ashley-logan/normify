@@ -78,3 +78,11 @@ impl UnknownArray {
         arr
     }
 }
+
+impl std::ops::Index<usize> for UnknownArray {
+    type Output = bool;
+
+    fn index(&self, _index: usize) -> &Self::Output {
+        panic!("Index not implemented for UnknownArray")
+    }
+}

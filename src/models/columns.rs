@@ -3,9 +3,18 @@ use crate::models::{ColumnType, Item};
 use crate::{NormArray, impl_concrete_cast};
 use indexmap::IndexSet;
 use std::fmt::Write;
+use std::marker::PhantomData;
+
+
+pub struct PK;
+pub struct FK;
+pub trait IdColumnTrait<K> {
+    fn insert_id(&mut self, id: u64) -> bool;
+    
+}
 
 #[derive(Clone)]
-pub struct IdColumn(IndexSet<u64>);
+pub struct IdColumn<K: 'static>(IndexSet<u64>, PhantomData<K>);
 
 // """
 //  __________ __________
@@ -26,15 +35,15 @@ pub struct IdColumn(IndexSet<u64>);
 // |__________|
 // """
 
-impl IdColumn {
+impl<K> IdColumn<K> {
     pub(crate) fn new() -> Self {
-        Self(IndexSet::new())
+        Self(IndexSet::new(), PhantomData)
     }
 
     pub(crate) fn from_id(id: u64) -> Self {
         let mut set: IndexSet<u64> = IndexSet::new();
         set.insert(id);
-        Self(set)
+        Self(set, PhantomData)
     }
 
     pub fn len(&self) -> usize {
@@ -60,7 +69,19 @@ impl IdColumn {
     }
 }
 
-impl ColumnType for IdColumn {
+impl IdColumn<PK> {
+    pub fn increment(&mut self) -> u64 {
+        let id: u64 = self.0.iter().max().unwrap_or(&0_u64).clone() + 1;
+        self.0.insert(id);
+        id
+    }
+}
+
+impl IdColumn<FK> {
+    todo!("shouldn't be index set because a FK column can have multiple rows with the same FK")
+}
+
+impl<K> ColumnType for IdColumn<K> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -123,14 +144,22 @@ impl ColumnType for IdColumn {
     fn push_null(&mut self) {}
 }
 
-impl From<UintColumn> for IdColumn {
-    fn from(value: UintColumn) -> Self {
-        let mut idcol: IdColumn = Self::new();
-        for id in value {
-            if let Item::Data(u) = id {
-                idcol.man_insert(u);
-            }
-        }
-        idcol
+// impl From<UintColumn> for IdColumn {
+//     fn from(value: UintColumn) -> Self {
+//         let mut idcol: IdColumn = Self::new();
+//         for id in value {
+//             if let Item::Data(u) = id {
+//                 idcol.man_insert(u);
+//             }
+//         }
+//         idcol
+//     }
+// }
+
+impl<K> std::ops::Index<usize> for IdColumn<K> {
+    type Output = u64;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.0[index]
     }
 }

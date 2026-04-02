@@ -1,5 +1,5 @@
 use crate::error::Result;
-use crate::models::{ColumnType, Item, NormArray, UnknownArray};
+use crate::models::{ColumnType, Item, NormArray, Table, UnknownArray};
 use serde_json::Value;
 
 // takes a slice of values and returns an owned vectored with all Value::Array items flattened
@@ -22,7 +22,7 @@ pub fn flatten(arr: &[Value]) -> Vec<Value> {
 pub fn normalize_arr(arr: &[Value]) -> Result<Box<dyn ColumnType>> {
     if arr.iter().any(Value::is_object) {
         // array cannot contain object Value variants
-        return Err(crate::NormError::Convert);
+        return Err(crate::error::NormError::Convert);
     }
 
     if arr.is_empty() {
@@ -119,5 +119,14 @@ pub fn normalize_arr(arr: &[Value]) -> Result<Box<dyn ColumnType>> {
                 })
                 .collect::<NormArray<String>>(), // can be downcasted to NormArray<String>
         ))
+    }
+}
+
+pub(crate) fn pad_columns(tbl: &mut Table) {
+    let n = tbl.num_rows();
+    for (_, col) in tbl.data_cols.iter_mut() {
+        for _ in 0..n - col.len() {
+            col.push_null();
+        }
     }
 }

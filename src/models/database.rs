@@ -1,7 +1,7 @@
 use std::ops::Index;
 
 use crate::error::Result;
-use crate::helpers::normalize_arr;
+use crate::helpers::{normalize_arr, pad_columns};
 use crate::models::{ColumnType, Item, Table, UnknownArray};
 use indexmap::IndexMap;
 use serde_json::{Map, Value};
@@ -192,6 +192,8 @@ impl Database {
                 }
             }
         }
+        // finished parsing current row
+        pad_columns(self.get_mut_or_panic(table_name));
         Ok(())
     }
 
